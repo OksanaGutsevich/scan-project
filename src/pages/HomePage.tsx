@@ -7,6 +7,7 @@ import styles from "./HomePage.module.css";
 import logoImg from "../assets/icons/logo.png";
 import logoImgFooter from "../assets/icons/logofooter.png";
 import mainImage from "../assets/icons/main.png";
+import avatarImage from "../assets/icons/avatar.png";
 import secondaryImage from "../assets/icons/secondary.png";
 import { TariffCard } from "../components/TariffCard";
 import beginnerImage from "../assets/icons/beginner.png";
@@ -15,7 +16,11 @@ import businessImage from "../assets/icons/business.png";
 import checkImage from "../assets/icons/check.png";
 
 export function HomePage() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
+
+  const limits = user?.eventFiltersInfo;
+  const used = limits?.usedCompanyCount ?? 0;
+  const total = limits?.companyLimit ?? 0;
 
   return (
     <div className={styles.container}>
@@ -40,13 +45,50 @@ export function HomePage() {
 
         <div className={styles.authBlock}>
           {isAuthenticated ? (
-            <button
-              className={styles.authButtons}
-              onClick={() => logout()}
-              type="button"
-            >
-              Выйти
-            </button>
+            limits ? (
+              <div className={styles.userInfoContainer}>
+                <div className={styles.limitsBlockWrapper}>
+                  <div className={styles.limitsBlock}>
+                    <span className={styles.limitLabel}>
+                      Использовано компаний
+                    </span>
+                    <span className={styles.limitValueUsed}>{used}</span>
+                  </div>
+
+                  <div className={styles.limitsBlock}>
+                    <span className={styles.limitLabel}>
+                      Лимит по компаниям
+                    </span>
+                    <span className={styles.limitValueTotal}>{total}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className={styles.userRow}>
+                    {/* Имя */}
+                    <span className={styles.userName}>Иванов И.</span>
+
+                    {/* Аватарка */}
+                    <img
+                      src={avatarImage}
+                      alt="Аватар пользователя"
+                      className={styles.avatar}
+                      loading="lazy"
+                    />
+                  </div>
+
+                  <button
+                    onClick={logout}
+                    className={styles.authButtons}
+                    type="button"
+                  >
+                    Выйти
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <span className={styles.loadingLimits}>Загрузка лимитов...</span>
+            )
           ) : (
             <>
               <button className={styles.btnRegister}>Зарегистрироваться</button>

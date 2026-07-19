@@ -1,14 +1,35 @@
+// src/pages/ResultsPage.tsx
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import apiClient from "../api/client";
-import type { SearchResponse, EventFiltersInfo } from "../types";
+// apiClient пока не нужен — используем моки для этапа вёрстки
+// import apiClient from '../api/client';
+
+import type {
+  SearchResponse,
+  EventFiltersInfo,
+  AnalyticsResponse,
+} from "../types";
+import { SearchStats } from "../components/SearchStats";
+import { PublicationCard } from "../components/PublicationCard";
+
+// Импортируем моковые данные из отдельного файла
+import { MOCK_SEARCH_RESPONSE, MOCK_ANALYTICS } from "../mock/mockData";
+
+// Моковые лимиты (можно тоже вынести в mockData, если нужно)
+const MOCK_LIMITS: EventFiltersInfo = {
+  usedCompanyCount: 3,
+  companyLimit: 10,
+};
 
 function ResultsPage() {
   const [searchParams] = useSearchParams();
-  const inn = searchParams.get("inn");
+  // Если в URL нет ИНН — подставим тестовый, чтобы страница не была пустой при вёрстке
+  const inn = searchParams.get("inn") || "7701234567";
 
   const [results, setResults] = useState<SearchResponse | null>(null);
   const [limits, setLimits] = useState<EventFiltersInfo | null>(null);
+  const [stats, setStats] = useState<AnalyticsResponse | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,7 +39,19 @@ function ResultsPage() {
       return;
     }
 
-    // Формируем payload строго по контракту: targetSearchEntities — всегда массив из 1 объекта
+    setLoading(true);
+    setError(null);
+
+    // --- ЭТАП ВЁРСТКИ: используем моки из src/mocks/mockData.ts ---
+    setTimeout(() => {
+      setLimits(MOCK_LIMITS);
+      setResults(MOCK_SEARCH_RESPONSE);
+      setStats(MOCK_ANALYTICS);
+      setLoading(false);
+    }, 400); // имитация небольшой задержки сети
+
+    /*
+    // ОРИГИНАЛЬНАЯ ЛОГИКА С API (раскомментировать на этапе подключения бэкенда):
     const payload = {
       issueDateInterval: {
         startDate: new Date().toISOString(),
@@ -26,16 +59,15 @@ function ResultsPage() {
       },
       searchContext: {
         targetSearchEntitiesContext: {
-          // ВАЖНО: всегда ровно один объект, как указано в требованиях проекта
-          targetSearchEntities: [{ type: "Company" }],
+          targetSearchEntities: [{ type: 'company', inn }],
           onlyMainRole: true,
-          tonality: "Any",
           onlyWithRiskFactors: false,
+          tonality: 'any',
           riskFactors: { and: [], or: [], not: [] },
           themes: { and: [], or: [], not: [] },
         },
         searchEntitiesFilter: {
-          and: [{ type: "Company" }],
+          and: [{ type: 'company' }],
           or: [],
           not: [],
         },
@@ -55,30 +87,28 @@ function ResultsPage() {
         excludeAnnouncements: true,
         excludeDigests: true,
       },
-      similarMode: "None",
-      intervalType: "Day",
+      similarMode: 'None',
+      intervalType: 'Day',
       limit: 50,
-      sortType: "None",
-      sortDirectionType: "Desc",
+      sortType: 'None',
+      sortDirectionType: 'Desc',
     };
 
-    setLoading(true);
-    setError(null);
-
-    // Параллельно грузим лимиты и результаты поиска
     Promise.all([
       apiClient
-        .get<{ eventFiltersInfo: EventFiltersInfo }>("/api/v1/account/info")
+        .get<{ eventFiltersInfo: EventFiltersInfo }>('/api/v1/account/info')
         .then((res) => res.data.eventFiltersInfo),
-      apiClient.post<SearchResponse>("/api/v1/objectsearch", payload),
+      apiClient.post<SearchResponse>('/api/v1/objectsearch', payload),
+      apiClient.get<AnalyticsResponse>('/api/v1/analytics').catch(() => null),
     ])
-      .then(([limitsData, searchData]) => {
+      .then(([limitsData, searchData, statsData]) => {
         setLimits(limitsData);
         setResults(searchData);
+        setStats(statsData);
         setLoading(false);
       })
       .catch((err) => {
-        let msg = "Не удалось загрузить данные.";
+        let msg = 'Не удалось загрузить данные.';
         if (err.response?.data?.message) {
           msg = err.response.data.message;
         } else if (err.message) {
@@ -87,6 +117,7 @@ function ResultsPage() {
         setError(msg);
         setLoading(false);
       });
+    */
   }, [inn]);
 
   if (loading) {
@@ -124,7 +155,7 @@ function ResultsPage() {
         Результаты поиска по ИНН {inn}
       </h1>
 
-      {/* Блок лимитов (если данные пришли) */}
+      {/* Блок лимитов */}
       {limits && (
         <div
           style={{
@@ -145,6 +176,10 @@ function ResultsPage() {
         </div>
       )}
 
+      {/* Блок статистики */}
+      {stats && <SearchStats points={stats.points} />}
+
+      {/* Список публикаций через PublicationCard */}
       {!results || results.items.length === 0 ? (
         <p>По заданным параметрам публикаций не найдено.</p>
       ) : (
@@ -161,31 +196,7 @@ function ResultsPage() {
             }}
           >
             {results.items.map((item) => (
-              <div
-                key={item.encodedId}
-                style={{
-                  border: "1px solid #ccc",
-                  padding: "1rem",
-                  borderRadius: "6px",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                }}
-              >
-                <h3
-                  style={{
-                    margin: 0,
-                    fontSize: "18px",
-                    marginBottom: "0.5rem",
-                  }}
-                >
-                  Публикация: {item.encodedId.substring(0, 30)}…
-                </h3>
-                <p style={{ margin: 0, color: "#555" }}>
-                  Влияние: <strong>{item.influence}</strong>
-                </p>
-                <p style={{ margin: "0.5rem 0 0", color: "#555" }}>
-                  Похожие публикации: <strong>{item.similarCount}</strong>
-                </p>
-              </div>
+              <PublicationCard key={item.encodedId} item={item} />
             ))}
           </div>
         </>

@@ -80,6 +80,7 @@
 
 .btn:hover {
   background: #e0e0e0;
+  color: #3b3939;
 }
 
 .btnCurrent {
@@ -93,7 +94,6 @@
 }
 
 .tariffTitleWrapper {
-  background-color: #ffb64f;
   border-radius: 12px 12px 0 0;
   display: flex;
   padding: 10px;

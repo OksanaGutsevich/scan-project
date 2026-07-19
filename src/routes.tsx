@@ -1,7 +1,7 @@
 // src/routes.tsx
 import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
-import AuthPage from "./pages/AuthPage";
+import { AuthPage } from "./pages/AuthPage";
 import SearchFormPage from "./pages/SearchFormPage";
 import ResultsPage from "./pages/ResultsPage";
 import PublicationDetailPage from "./pages/PublicationDetailPage"; // <-- подключаем страницу
