@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import { WhyWeCarousel } from "../components/WhyWeCarousel";
 import { WHY_WE_CARDS } from "../mock/mockData";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import styles from "./HomePage.module.css";
 import logoImg from "../assets/icons/logo.png";
 import logoImgFooter from "../assets/icons/logofooter.png";
