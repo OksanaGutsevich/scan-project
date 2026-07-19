@@ -1,4 +1,7 @@
-// src/mocks/mockData.ts
+import speed from "../assets/icons/speed.png";
+import base from "../assets/icons/base.png";
+import confidence from "../assets/icons/confidence.png";
+
 import type {
   SearchResponse,
   AnalyticsResponse,
@@ -59,23 +62,34 @@ export const MOCK_SCANDOC: ScanDoc = {
 export const WHY_WE_CARDS: WhyWeCard[] = [
   {
     id: "card-1",
-    title: "Быстрый поиск по ИНН",
-    description:
-      "Находите публикации о компании за считанные секунды — система анализирует тысячи источников.",
-    icon: "⚡",
+    title: "Высокая и оперативная скорость обработки заявки",
+    icon: speed,
   },
   {
     id: "card-2",
-    title: "Фильтрация по тональности",
-    description:
-      "Отделяйте нейтральные упоминания от позитивных и негативных — это важно для репутационного анализа.",
-    icon: "🎯",
+    title:
+      "Огромная комплексная база данных, обеспечивающая объективный ответ на запрос",
+    icon: base,
   },
   {
     id: "card-3",
+    title:
+      "Защита конфеденциальных сведений, не подлежащих разглашению по федеральному законодательству",
+    icon: confidence,
+  },
+  {
+    id: "card-4",
     title: "Аналитика и статистика",
-    description:
-      "Смотрите динамику упоминаний по дням, источникам и темам — всё в наглядных графиках.",
-    icon: "📈",
+    icon: base,
+  },
+  {
+    id: "card-5",
+    title: "Проверенная информация",
+    icon: speed,
+  },
+  {
+    id: "card-6",
+    title: "Экономия времени и финансов",
+    icon: confidence,
   },
 ];

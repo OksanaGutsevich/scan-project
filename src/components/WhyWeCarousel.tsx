@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { WhyWeCard } from "../types";
+import styles from "./WhyWeCarousel.module.css";
 
 interface WhyWeCarouselProps {
   cards: WhyWeCard[];
@@ -7,112 +8,97 @@ interface WhyWeCarouselProps {
 
 export const WhyWeCarousel = ({ cards }: WhyWeCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [cardWidth, setCardWidth] = useState<number>(0);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const total = cards.length;
   if (total === 0) return null;
 
-  const prev = () => setCurrentIndex((i) => (i === 0 ? total - 1 : i - 1));
-  const next = () => setCurrentIndex((i) => (i === total - 1 ? 0 : i + 1));
+  const prev = () => {
+    setCurrentIndex((i) => (i === 0 ? total - 1 : i - 1));
+  };
 
-  const card = cards[currentIndex];
+  const next = () => {
+    setCurrentIndex((i) => (i === total - 1 ? 0 : i + 1));
+  };
+
+  const gap = 32;
+  const offset = currentIndex * (cardWidth + gap);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (containerRef.current) {
+        const card = containerRef.current.querySelector(`.${styles.card}`);
+        if (card) {
+          const rect = card.getBoundingClientRect();
+          setCardWidth(rect.width);
+        }
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
-    <section style={{ padding: "3rem 0", background: "#fff" }}>
-      <div style={{ maxWidth: "900px", margin: "0 auto" }}>
-        <h2
-          style={{
-            textAlign: "center",
-            marginBottom: "2rem",
-            fontSize: "24px",
-          }}
-        >
-          Почему именно мы
-        </h2>
+    <section className={styles.sectionCarousel}>
+      <div className={styles.container}>
+        <h2 className={styles.title}>Почему именно мы</h2>
 
-        <div
-          style={{
-            position: "relative",
-            maxWidth: "600px",
-            margin: "0 auto",
-          }}
-        >
-          {/* Карточка */}
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "32px", marginBottom: "1rem" }}>
-              {card.icon}
+        <div className={styles.carouselWrapper}>
+          {/* wrapper: overflow + position:relative для кнопок */}
+          <div className={styles.wrapper}>
+            <div
+              ref={containerRef}
+              className={styles.cardsContainer}
+              style={{
+                transform: `translateX(-${offset}px)`,
+                transition:
+                  currentIndex === 0 || currentIndex === total - 1
+                    ? "none"
+                    : "transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)",
+              }}
+            >
+              {cards.map((card, index) => {
+                // Если карточка сейчас первая (после сдвига), добавляем класс
+                const isFirst = index === currentIndex;
+
+                return (
+                  <div
+                    key={card.id}
+                    className={`${styles.card} ${isFirst ? styles.isFirst : ""}`}
+                  >
+                    <img
+                      src={card.icon}
+                      alt={card.title}
+                      className={styles.cardIcon}
+                      loading="lazy"
+                    />
+                    <h3 className={styles.cardTitle}>{card.title}</h3>
+                  </div>
+                );
+              })}
             </div>
-            <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "18px" }}>
-              {card.title}
-            </h3>
-            <p style={{ color: "#555", lineHeight: 1.5 }}>{card.description}</p>
-          </div>
 
-          {/* Стрелки */}
-          <button
-            type="button"
-            onClick={prev}
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "16px",
-              transform: "translateY(-50%)",
-              background: "transparent",
-              border: "none",
-              fontSize: "20px",
-              cursor: "pointer",
-              padding: "8px",
-              zIndex: 10,
-              userSelect: "none",
-            }}
-          >
-            ‹
-          </button>
+            {/* кнопки внутри wrapper, но снаружи cardsContainer */}
+            <button
+              type="button"
+              onClick={prev}
+              className={`${styles.navButton} ${styles.prev}`}
+              aria-label="Предыдущая карточка"
+            >
+              ‹
+            </button>
 
-          <button
-            type="button"
-            onClick={next}
-            style={{
-              position: "absolute",
-              top: "50%",
-              right: "16px",
-              transform: "translateY(-50%)",
-              background: "transparent",
-              border: "none",
-              fontSize: "20px",
-              cursor: "pointer",
-              padding: "8px",
-              zIndex: 10,
-              userSelect: "none",
-            }}
-          >
-            ›
-          </button>
-
-          {/* Индикаторы (точки) */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: "6px",
-              marginTop: "1.5rem",
-            }}
-          >
-            {cards.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setCurrentIndex(i)}
-                style={{
-                  width: "10px",
-                  height: "10px",
-                  borderRadius: "50%",
-                  border: "none",
-                  background: i === currentIndex ? "#007bff" : "#ddd",
-                  padding: 0,
-                  cursor: "pointer",
-                }}
-              />
-            ))}
+            <button
+              type="button"
+              onClick={next}
+              className={`${styles.navButton} ${styles.next}`}
+              aria-label="Следующая карточка"
+            >
+              ›
+            </button>
           </div>
         </div>
       </div>

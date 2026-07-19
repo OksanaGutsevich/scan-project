@@ -1,0 +1,114 @@
+.sectionCarousel {
+  padding: 3rem 0;
+  background: #fff;
+}
+
+.container {
+  width: 100%;
+  max-width: 1346px;
+}
+
+.title {
+  text-align: left;
+  margin-bottom: 2rem;
+  font-size: 45px;
+  text-transform: uppercase;
+  font-family: "FerryBlack", sans-serif;
+}
+
+.carouselWrapper {
+  position: relative;
+  width: 100%;
+  max-width: 1346px;
+  margin: 0 auto;
+}
+
+/* wrapper — теперь контейнер для обрезки И для позиционирования кнопок */
+.wrapper {
+  position: relative; /* важно: теперь кнопки позиционируются отсюда */
+  width: 100%;
+  overflow: hidden;
+}
+
+.cardsContainer {
+  display: flex;
+  gap: 36px;
+  transform: translateX(0);
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  padding: 36px;
+  overflow: hidden;
+}
+
+.card {
+  /* Ширина ровно 1/3 минус 2 отступа по 32px */
+  flex: 0 0 calc((100% - 2 * 36px) / 3);
+  max-width: 400px;
+  padding: 22px;
+  border-radius: 8px;
+  height: 225px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-sizing: border-box; /* Критично: чтобы padding не увеличивал общую ширину сверх flex-расчета */
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+.card:hover:not(.card--current) {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Класс, который будем добавлять через React для «первой» карточки */
+.card.isFirst {
+  margin-left: 15px; /* вот этот отступ и создаёт эффект «большого padding» слева */
+}
+
+.cardIcon {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  display: block;
+  padding-bottom: 20px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.navButton {
+  width: 39px;
+  height: 39px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  font-size: 60px;
+  cursor: pointer;
+  padding: 8px 12px;
+  z-index: 10;
+  user-select: none;
+  color: #cfc2c2;
+  transition:
+    color 0.2s,
+    transform 0.2s;
+}
+
+.navButton:hover {
+  transform: translateY(-50%) scale(1.2);
+}
+
+.prev {
+  left: 10px;
+}
+
+.next {
+  right: -10px;
+}

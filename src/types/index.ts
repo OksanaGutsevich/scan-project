@@ -148,6 +148,5 @@ export interface ScanDoc {
 export interface WhyWeCard {
   id: string;
   title: string;
-  description: string;
   icon: string; // можно использовать эмодзи или код иконки
 }

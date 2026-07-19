@@ -1,0 +1,171 @@
+.container {
+  width: 100%;
+  max-width: 1440px;
+  margin-left: 47px;
+  margin-right: 47px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+}
+
+/* Навигация (по центру) */
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 4rem;
+  margin: 0 auto; /* принудительно центрируем сам блок меню */
+}
+
+.navLinks a,
+.navLinks Link {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  transition: color 0.3s;
+  cursor: pointer;
+}
+
+.navLinks a:hover,
+.navLinks Link:hover {
+  color: #029491;
+  transform: scale(1.2);
+}
+
+/* Блок авторизации (справа) */
+.authBlock {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0; /* не сжимается */
+  padding-right: 94px;
+}
+
+.btnRegister {
+  background: transparent;
+  color: #d9d9d9;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  /* Важно: убираем правый отступ, если он был, и контролируем через gap */
+}
+
+/* Вертикальная черта справа от кнопки */
+.btnRegister::after {
+  content: "";
+  position: absolute;
+  right: -0.1rem; /* отступ от края кнопки до черты (подбирай под дизайн) */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 32px; /* высота черты */
+  background-color: #7ce3e1;
+}
+
+.btnLogin {
+  color: black;
+  text-decoration: none;
+  background: #7ce3e1;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.btnLogin:hover {
+  transform: scale(1.1); /* увеличение на 5% */
+  background-color: transparent;
+}
+
+.mainContent {
+  display: flex;
+}
+
+.mainTitle {
+  font-size: 60px;
+  text-transform: uppercase;
+  font-weight: 800;
+  font-family: "FerryBlack", sans-serif;
+}
+
+.mainText {
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.mainImage {
+  margin-right: 48px;
+}
+
+.planesWrapper {
+  display: flex;
+  gap: 36px;
+  margin: 48px 0 82px 0;
+  padding-left: 48px;
+  padding-right: 48px;
+}
+
+.planesTitle {
+  font-size: 45px;
+  font-family: "FerryBlack", sans-serif;
+}
+
+.fulldescriptionWrapper {
+  text-align: left;
+  width: 100%;
+  box-sizing: border-box;
+  padding-left: 20px;
+  padding-left: 20px;
+}
+
+.featuresListTitle {
+  margin: 0;
+  font-size: 20px;
+}
+
+.featuresList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 18px;
+}
+
+.featuresListWrapper {
+  margin-top: 50px;
+  margin-bottom: 30px;
+}
+
+.priceDeccription {
+  margin: 0;
+}
+
+.footer {
+  min-height: 137px;
+  background-color: #029491;
+  width: 100%;
+  width: 100%;
+  max-width: 1440px;
+}
+
+.footerContent {
+  display: flex;
+  justify-content: space-between; /* разводит элементы по краям */
+  align-items: center; /* выравнивает по вертикали */
+  flex-wrap: wrap; /* на мобильных позволит перенести текст под логотип */
+}
+
+.logoWrapper {
+  margin-left: 48px;
+}
+
+.footerText {
+  color: #ffffff;
+  flex: 1 1 auto;
+  text-align: right;
+  font-size: 0.95rem;
+  gap: 1.5rem;
+  margin-right: 48px;
+}
