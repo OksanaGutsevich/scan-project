@@ -21,7 +21,7 @@ export function AuthPage() {
       await loginUser(login, password); // <-- вызываем loginUser
       const from =
         (location.state as { from?: { pathname: string } })?.from?.pathname ||
-        "/search";
+        "/";
       navigate(from, { replace: true });
     } catch (err: any) {
       let msg = "Ошибка авторизации";

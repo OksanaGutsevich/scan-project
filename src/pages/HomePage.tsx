@@ -15,7 +15,7 @@ import businessImage from "../assets/icons/business.png";
 import checkImage from "../assets/icons/check.png";
 
 export function HomePage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
 
   return (
     <div className={styles.container}>
@@ -42,7 +42,8 @@ export function HomePage() {
           {isAuthenticated ? (
             <button
               className={styles.authButtons}
-              onClick={() => console.log("Logout")}
+              onClick={() => logout()}
+              type="button"
             >
               Выйти
             </button>
