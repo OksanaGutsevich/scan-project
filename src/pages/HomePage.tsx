@@ -14,6 +14,7 @@ import beginnerImage from "../assets/icons/beginner.png";
 import proImage from "../assets/icons/pro.png";
 import businessImage from "../assets/icons/business.png";
 import checkImage from "../assets/icons/check.png";
+import { LoadingSpinner } from "../components/LoadingSpinner";
 
 export function HomePage() {
   const { isAuthenticated, logout, user } = useAuth();
@@ -45,8 +46,9 @@ export function HomePage() {
 
         <div className={styles.authBlock}>
           {isAuthenticated ? (
-            limits ? (
-              <div className={styles.userInfoContainer}>
+            <div className={styles.userInfoContainer}>
+              {limits ? (
+                // Когда лимиты загружены — показываем limitsBlockWrapper
                 <div className={styles.limitsBlockWrapper}>
                   <div className={styles.limitsBlock}>
                     <span className={styles.limitLabel}>
@@ -62,33 +64,36 @@ export function HomePage() {
                     <span className={styles.limitValueTotal}>{total}</span>
                   </div>
                 </div>
-
-                <div>
-                  <div className={styles.userRow}>
-                    {/* Имя */}
-                    <span className={styles.userName}>Иванов И.</span>
-
-                    {/* Аватарка */}
-                    <img
-                      src={avatarImage}
-                      alt="Аватар пользователя"
-                      className={styles.avatar}
-                      loading="lazy"
-                    />
-                  </div>
-
-                  <button
-                    onClick={logout}
-                    className={styles.authButtons}
-                    type="button"
-                  >
-                    Выйти
-                  </button>
+              ) : (
+                // Когда лимитов ещё нет — вместо limitsBlockWrapper показываем спиннер
+                <div className={styles.loadingSpinnerWrapperForLimits}>
+                  <LoadingSpinner />
                 </div>
+              )}
+
+              {/* Эти элементы (аватар + кнопка) остаются на месте всегда,
+          когда пользователь авторизован — они не зависят от limits */}
+              <div>
+                <div className={styles.userRow}>
+                  <span className={styles.userName}>Иванов И.</span>
+
+                  <img
+                    src={avatarImage}
+                    alt="Аватар пользователя"
+                    className={styles.avatar}
+                    loading="lazy"
+                  />
+                </div>
+
+                <button
+                  onClick={logout}
+                  className={styles.authButtons}
+                  type="button"
+                >
+                  Выйти
+                </button>
               </div>
-            ) : (
-              <span className={styles.loadingLimits}>Загрузка лимитов...</span>
-            )
+            </div>
           ) : (
             <>
               <button className={styles.btnRegister}>Зарегистрироваться</button>

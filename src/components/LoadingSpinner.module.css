@@ -1,0 +1,35 @@
+.spinnerRing {
+  position: relative;
+  width: 175px;
+  height: 63px;
+  background-color: #d9d9d9;
+}
+
+.dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* центр точки ставим в центр кольца, потом сдвигаем по орбите */
+  margin-top: -2px;
+  margin-left: -2px;
+
+  /* базовый размер (будет меняться через scale в анимации) */
+  width: 4px;
+  height: 4px;
+
+  /* пустой круг с тёмным контуром */
+  background-color: transparent;
+  border: 1px solid #1f2937; /* тёмный контур под дизайн проекта */
+  border-radius: 50%;
+
+  animation: orbitAndScale 2.2s linear infinite;
+}
+
+@keyframes orbitAndScale {
+  0% {
+    transform: rotate(0deg) translateX(22px) scale(0.6);
+  }
+  100% {
+    transform: rotate(360deg) translateX(22px) scale(1.4); /* от маленькой до большой */
+  }
+}

@@ -132,6 +132,17 @@
   flex-direction: column;
 }
 
+.loadingSpinnerWrapperForLimits {
+  /* чтобы спиннер был по центру по вертикали, как блок лимитов */
+  display: flex;
+  justify-content: left;
+  align-items: center;
+
+  /* фиксируем размер, чтобы верстка не «прыгала» */
+  width: 120px; /* как min-width у limitsBlockWrapper */
+  height: 48px; /* подбери под высоту блока лимитов */
+}
+
 .authButtons {
   border: none;
   background-color: transparent;
