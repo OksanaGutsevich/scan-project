@@ -1,19 +1,108 @@
 .container {
+  width: 100%;
+  max-width: 1440px;
+  min-height: 902px;
+  margin-left: 47px;
+  margin-right: 47px;
+}
+
+.mainWrapper {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 20px;
-  background: #f5f7fa;
+}
+
+.mainTitle {
+  font-size: 40px;
+  text-transform: uppercase;
+  font-weight: 800;
+  font-family: "FerryBlack", sans-serif;
+  margin-left: 0 0 0 60px;
+}
+
+.haractersImage {
+  margin-left: 172px;
 }
 
 .card {
   background: #fff;
   width: 100%;
   max-width: 400px;
+  height: 523px;
   padding: 32px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 80px;
+  margin-right: 141px;
+}
+
+.topAuthButtons {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 40px;
+}
+
+.btnRegister {
+  background: transparent;
+  color: #d9d9d9;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.btnLogin {
+  color: #7ce3e1;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.btnLogin {
+  color: #7ce3e1;
+}
+
+.btnLogin,
+.btnRegister {
+  position: relative;
+  display: inline-block;
+  padding: 8px 16px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-size: 1rem;
+}
+
+.btnLogin::before,
+.btnRegister::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #d9d9d9;
+  transform-origin: left;
+  transition: transform 0.3s ease-in-out;
+}
+
+.btnLogin::after,
+.btnRegister::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #7ce3e1;
+  transform: scaleX(0); /* изначально линия скрыта */
+  transform-origin: left;
+  transition: transform 0.3s ease-in-out;
+}
+
+.btnLogin:hover::after,
+.btnRegister:hover::after {
+  transform: scaleX(1); /* при наведении линия раскрывается */
 }
 
 .title {
@@ -23,14 +112,15 @@
 }
 
 .formGroup {
-  margin-bottom: 16px;
+  margin: 15px 0;
 }
 
 .label {
   display: block;
-  margin-bottom: 6px;
-  color: #333;
+  margin-bottom: 15px;
+  color: #949494;
   font-weight: 500;
+  font-size: 16px;
 }
 
 .input {
@@ -44,12 +134,12 @@
 
 .input:focus {
   outline: none;
-  border-color: #5970ff;
   box-shadow: 0 0 0 3px rgba(89, 112, 255, 0.1);
 }
 
 .btn {
   width: 100%;
+  height: 59px;
   padding: 12px;
   background: #5970ff;
   color: #fff;
@@ -58,14 +148,85 @@
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
+  font-size: 22px;
 }
 
 .btn:hover {
   background: #4a5fd9;
 }
 
+.btn:disabled {
+  background-color: rgba(89, 112, 255, 0.3); /* полупрозрачный синий */
+  opacity: 0.7; /* дополнительная визуальная «приглушённость» */
+}
+
+.btn:not(:disabled):hover {
+  background-color: #4a5ddf; /* чуть темнее при наведении */
+}
+
 .error {
   color: #d32f2f;
   margin-bottom: 16px;
   font-size: 0.9rem;
+}
+
+.forgotPasswordBlock {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.socialAuthBlock {
+  margin-top: 24px;
+  text-align: left;
+}
+
+.socialAuthText {
+  display: block;
+  font-size: 0.9rem;
+  color: #949494;
+  margin-bottom: 16px;
+}
+
+.socialIcons {
+  display: flex;
+  justify-content: left;
+  gap: 10px;
+}
+
+.socialBtn {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 31px;
+  border: 1px solid rgba(89, 112, 255, 0.5);
+  border-radius: 4px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.socialBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Общие стили для картинки-иконки */
+.iconImg {
+  width: 43px;
+  height: 20px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Цвета фона для кнопок (чтобы иконки выглядели как на стандартных кнопках) */
+.yandexBtn,
+.googleBtn,
+.facebookBtn {
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(10, 10, 10, 0.15);
 }
