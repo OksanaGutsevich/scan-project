@@ -19,6 +19,9 @@ export function SearchFormPage() {
   const [onlyWithRiskFactors, setOnlyWithRiskFactors] = useState(false);
   const [tonality, setTonality] = useState<TonalityOption>("any");
 
+  // ✅ Новое поле: лимит выдачи
+  const [limit, setLimit] = useState<string>("50");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,15 +42,22 @@ export function SearchFormPage() {
   const handleSearch = async () => {
     const innClean = inn.replace(/\D/g, "");
 
+    // Валидация ИНН
     if (!innClean) {
       setError("Укажите ИНН");
+      return;
+    }
+
+    // Валидация лимита (1–1000, только цифры)
+    const limitNum = Number(limit);
+    if (Number.isNaN(limitNum) || limitNum < 1 || limitNum > 1000) {
+      setError("Количество документов должно быть числом от 1 до 1000");
       return;
     }
 
     setLoading(true);
     setError(null);
 
-    // ✅ Только inn, без лишних полей
     const targetEntity: TargetSearchEntity = {
       type: "company",
       inn: innClean,
@@ -90,7 +100,7 @@ export function SearchFormPage() {
       },
       similarMode: "None",
       intervalType: "Day",
-      limit: 50,
+      limit: limitNum, // ✅ Передаём число
       sortType: "None",
       sortDirectionType: "Desc",
     };
@@ -107,6 +117,7 @@ export function SearchFormPage() {
         tonality,
         onlyMainRole: String(onlyMainRole),
         onlyWithRiskFactors: String(onlyWithRiskFactors),
+        limit: String(limitNum),
       });
 
       navigate(`/results?inn=${encodeURIComponent(innClean)}`);
@@ -201,6 +212,7 @@ export function SearchFormPage() {
             }}
           />
         </div>
+
         <div>
           <label
             style={{
@@ -219,6 +231,7 @@ export function SearchFormPage() {
             style={{ width: "100%", padding: "8px", borderRadius: "4px" }}
           />
         </div>
+
         <div>
           <label
             style={{
@@ -235,6 +248,37 @@ export function SearchFormPage() {
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
             style={{ width: "100%", padding: "8px", borderRadius: "4px" }}
+          />
+        </div>
+
+        {/* ✅ Новое поле: количество документов */}
+        <div>
+          <label
+            style={{
+              display: "block",
+              marginBottom: "6px",
+              fontWeight: "600",
+              fontSize: "14px",
+            }}
+          >
+            Количество документов к выдаче
+          </label>
+          <input
+            type="number"
+            min={1}
+            max={1000}
+            value={limit}
+            placeholder="От 1 до 1000"
+            onChange={(e) => {
+              const val = e.target.value;
+              setLimit(val);
+            }}
+            style={{
+              width: "100%",
+              padding: "8px 12px",
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+            }}
           />
         </div>
       </div>
@@ -255,7 +299,7 @@ export function SearchFormPage() {
             color: "#333",
           }}
         >
-          Фильтры контекста упоминания
+          Фильтры
         </h3>
         <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
           <div>
@@ -268,7 +312,7 @@ export function SearchFormPage() {
                 onChange={(e) => setOnlyMainRole(e.target.checked)}
                 style={{ marginRight: "6px" }}
               />
-              Только главная роль
+              Главная роль в публикации
             </label>
           </div>
           <div>
@@ -281,7 +325,7 @@ export function SearchFormPage() {
                 onChange={(e) => setOnlyWithRiskFactors(e.target.checked)}
                 style={{ marginRight: "6px" }}
               />
-              Только с риск-факторами
+              Публикации только с риск-факторами
             </label>
           </div>
           <div>
