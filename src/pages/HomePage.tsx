@@ -2,108 +2,25 @@
 import { Link } from "react-router-dom";
 import { WhyWeCarousel } from "../components/WhyWeCarousel";
 import { WHY_WE_CARDS } from "../mock/mockData";
-import { useAuth } from "../hooks/useAuth";
 import styles from "./HomePage.module.css";
-import logoImg from "../assets/icons/logo.png";
-import logoImgFooter from "../assets/icons/logofooter.png";
 import mainImage from "../assets/icons/main.png";
-import avatarImage from "../assets/icons/avatar.png";
 import secondaryImage from "../assets/icons/secondary.png";
 import { TariffCard } from "../components/TariffCard";
 import beginnerImage from "../assets/icons/beginner.png";
 import proImage from "../assets/icons/pro.png";
 import businessImage from "../assets/icons/business.png";
 import checkImage from "../assets/icons/check.png";
-import { LoadingSpinner } from "../components/LoadingSpinner";
+import { useAuth } from "../hooks/useAuth";
+import { Header } from "../components/Header/Header";
+import { Footer } from "../components/Footer/Footer";
 
 export function HomePage() {
-  const { isAuthenticated, logout, user } = useAuth();
-
-  const limits = user?.eventFiltersInfo;
-  const used = limits?.usedCompanyCount ?? 0;
-  const total = limits?.companyLimit ?? 0;
+  const { isAuthenticated } = useAuth();
 
   return (
     <div className={styles.container}>
-      {/* HEADER */}
-      <header className={styles.header}>
-        <div className={styles.logo}>
-          <Link to="/" aria-label="Главная страница">
-            <img
-              src={logoImg}
-              alt="Логотип Scan.Pub"
-              className={styles.logoImage}
-              loading="lazy"
-            />
-          </Link>
-        </div>
-
-        <nav className={styles.navLinks}>
-          <Link to="/">Главная</Link>
-          <a href="#">Тарифы</a>
-          <a href="#">FAQ</a>
-        </nav>
-
-        <div className={styles.authBlock}>
-          {isAuthenticated ? (
-            <div className={styles.userInfoContainer}>
-              {limits ? (
-                // Когда лимиты загружены — показываем limitsBlockWrapper
-                <div className={styles.limitsBlockWrapper}>
-                  <div className={styles.limitsBlock}>
-                    <span className={styles.limitLabel}>
-                      Использовано компаний
-                    </span>
-                    <span className={styles.limitValueUsed}>{used}</span>
-                  </div>
-
-                  <div className={styles.limitsBlock}>
-                    <span className={styles.limitLabel}>
-                      Лимит по компаниям
-                    </span>
-                    <span className={styles.limitValueTotal}>{total}</span>
-                  </div>
-                </div>
-              ) : (
-                // Когда лимитов ещё нет — вместо limitsBlockWrapper показываем спиннер
-                <div className={styles.loadingSpinnerWrapperForLimits}>
-                  <LoadingSpinner />
-                </div>
-              )}
-
-              {/* Эти элементы (аватар + кнопка) остаются на месте всегда,
-          когда пользователь авторизован — они не зависят от limits */}
-              <div>
-                <div className={styles.userRow}>
-                  <span className={styles.userName}>Иванов И.</span>
-
-                  <img
-                    src={avatarImage}
-                    alt="Аватар пользователя"
-                    className={styles.avatar}
-                    loading="lazy"
-                  />
-                </div>
-
-                <button
-                  onClick={logout}
-                  className={styles.authButtons}
-                  type="button"
-                >
-                  Выйти
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <button className={styles.btnRegister}>Зарегистрироваться</button>
-              <Link to="/auth" className={styles.btnLogin}>
-                Войти
-              </Link>
-            </>
-          )}
-        </div>
-      </header>
+      {/* Header вынесен отдельно*/}
+      <Header />
 
       {/* MAIN */}
       <main className={styles.main}>
@@ -311,28 +228,7 @@ export function HomePage() {
       </main>
 
       {/* Футер */}
-      <footer className={styles.footer}>
-        <div className={styles.footerContent}>
-          <div className={styles.logoWrapper}>
-            <img
-              src={logoImgFooter}
-              alt="Логотип Scan.Pub"
-              className={styles.logoImage}
-              loading="lazy"
-            />
-          </div>
-          <div className={styles.footerText}>
-            <p>
-              г. Москва, Цветной б-р, 40
-              <br />
-              +7 495 771 21 11
-              <br />
-              info@skan.ru
-            </p>
-            <p className={styles.copyright}>Copyright. 2022</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

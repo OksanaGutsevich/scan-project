@@ -15,23 +15,43 @@
   text-transform: uppercase;
   font-weight: 800;
   font-family: "FerryBlack", sans-serif;
-  margin-left: 0 0 0 60px;
+  margin-left: 30px;
 }
 
 .haractersImage {
   margin-left: 172px;
 }
 
+.authLayout {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+}
+
 .card {
+  position: relative;
+  z-index: 2;
   background: #fff;
   width: 100%;
-  max-width: 400px;
+  width: 400px;
   height: 523px;
   padding: 32px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   margin-bottom: 80px;
   margin-right: 141px;
+}
+
+.overlayImage {
+  position: absolute;
+  top: -24px; /* выходит за верхнюю границу карточки */
+  left: -24px; /* выходит за правую границу карточки */
+  height: auto;
+  z-index: 3; /* выше карточки */
+  object-fit: contain;
+  pointer-events: none; /* чтобы не мешала кликам */
 }
 
 .topAuthButtons {
@@ -229,4 +249,15 @@
 .facebookBtn {
   background-color: #fff;
   box-shadow: 0 2px 4px rgba(10, 10, 10, 0.15);
+}
+
+.passwordErrorText,
+.loginErrorText {
+  color: #d32f2f; /* Красный цвет из Material Design, не слишком яркий */
+  font-size: 0.875rem; /* 14px — компактно, не ломает верстку */
+  line-height: 1.3;
+  margin-top: 6px; /* Отступ от инпута */
+  margin-bottom: 12px; /* Чтобы не прилипало к кнопке */
+  display: block;
+  text-align: center;
 }
