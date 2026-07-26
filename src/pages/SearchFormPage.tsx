@@ -1,19 +1,23 @@
+// src/pages/SearchFormPage.tsx
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import apiClient from "../api/client";
-import type { SearchPayload, SearchResponse } from "../types";
+import type {
+  SearchPayload,
+  SearchResponse,
+  TonalityOption,
+  TargetSearchEntity,
+} from "../types";
+import axios from "axios";
 
 export function SearchFormPage() {
   const [inn, setInn] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
-  // Фильтры из предыдущего шага
   const [onlyMainRole, setOnlyMainRole] = useState(true);
   const [onlyWithRiskFactors, setOnlyWithRiskFactors] = useState(false);
-  const [tonality, setTonality] = useState<"any" | "negative" | "positive">(
-    "any",
-  );
+  const [tonality, setTonality] = useState<TonalityOption>("any");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,8 +25,21 @@ export function SearchFormPage() {
   const navigate = useNavigate();
   const [, setSearchParams] = useSearchParams();
 
+  // Нормализация даты: только YYYY-MM-DD
+  const normalizeDate = (dateStr?: string): string => {
+    if (!dateStr) {
+      return new Date().toISOString().split("T")[0];
+    }
+    const clean = dateStr.split("T")[0].split(" ")[0];
+    return /^\d{4}-\d{2}-\d{2}$/.test(clean)
+      ? clean
+      : new Date().toISOString().split("T")[0];
+  };
+
   const handleSearch = async () => {
-    if (!inn.trim()) {
+    const innClean = inn.replace(/\D/g, "");
+
+    if (!innClean) {
       setError("Укажите ИНН");
       return;
     }
@@ -30,24 +47,20 @@ export function SearchFormPage() {
     setLoading(true);
     setError(null);
 
-    // Формируем целевой объект СТРОГО по контракту проекта:
-    // type: 'company', inn: значение, остальные поля не передаём (undefined)
-    const targetEntity = {
-      type: "company" as const, // Гарантируем тип 'company', а не просто string
-      inn: inn,
-      // sparkId, entityId, inBusinessNews, maxFullness — не добавляем,
-      // так как в рамках проекта они должны быть null/не использоваться.
-      // Axios не отправит undefined поля в JSON.
+    // ✅ Только inn, без лишних полей
+    const targetEntity: TargetSearchEntity = {
+      type: "company",
+      inn: innClean,
     };
 
     const payload: SearchPayload = {
       issueDateInterval: {
-        startDate: fromDate || new Date().toISOString(),
-        endDate: toDate || new Date().toISOString(),
+        startDate: normalizeDate(fromDate),
+        endDate: normalizeDate(toDate),
       },
       searchContext: {
         targetSearchEntitiesContext: {
-          targetSearchEntities: [targetEntity], // Всегда массив из 1 элемента
+          targetSearchEntities: [targetEntity],
           onlyMainRole,
           onlyWithRiskFactors,
           tonality,
@@ -55,7 +68,7 @@ export function SearchFormPage() {
           themes: { and: [], or: [], not: [] },
         },
         searchEntitiesFilter: {
-          and: [{ type: "company" }], // Приводим к lowercase, если бэкенд ожидает так
+          and: [{ type: "company" }],
           or: [],
           not: [],
         },
@@ -83,46 +96,73 @@ export function SearchFormPage() {
     };
 
     try {
-      const res = await apiClient.post<SearchResponse>(
+      const response = await apiClient.post<SearchResponse>(
         "/api/v1/objectsearch",
         payload,
       );
+      console.log("✅ Успех:", response.data);
 
-      // Сохраняем параметры в URL
       setSearchParams({
-        inn,
+        inn: innClean,
         tonality,
         onlyMainRole: String(onlyMainRole),
         onlyWithRiskFactors: String(onlyWithRiskFactors),
       });
-      navigate("/results?inn=" + encodeURIComponent(inn));
-    } catch (err: any) {
-      let msg = "Ошибка поиска. Проверьте параметры.";
-      if (err.response?.data?.message) {
-        msg = err.response.data.message;
-      } else if (err.message) {
-        msg = err.message;
+
+      navigate(`/results?inn=${encodeURIComponent(innClean)}`);
+    } catch (err: unknown) {
+      console.group("❌ Ошибка запроса");
+
+      if (axios.isAxiosError(err)) {
+        console.log("📡 Ответ сервера:", err.response?.data);
+        console.log("📤 Отправленные данные:", err.config.data);
+
+        let msg = "Ошибка поиска. Проверьте параметры.";
+        const data = err.response?.data;
+
+        if (typeof data === "string") {
+          msg = data;
+        } else if (data && typeof data === "object") {
+          if (data.message) msg = String(data.message);
+          if (data.details) {
+            const details = Array.isArray(data.details)
+              ? data.details.join("; ")
+              : String(data.details);
+            msg = details;
+          }
+        }
+
+        setError(msg);
+      } else {
+        const message =
+          err instanceof Error ? err.message : "Неизвестная ошибка";
+        console.error("⚠️ Неожиданная ошибка:", message);
+        setError(message);
       }
-      setError(msg);
+
+      console.groupEnd();
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container">
-      <h1 style={{ marginBottom: "1.5rem", fontSize: "20px" }}>
+    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "20px" }}>
+      <h1
+        style={{ marginBottom: "1.5rem", fontSize: "24px", fontWeight: "600" }}
+      >
         Поиск публикаций по ИНН
       </h1>
 
       {error && (
         <div
           style={{
-            color: "red",
-            marginBottom: "1rem",
-            padding: "0.5rem",
+            color: "#d32f2f",
+            marginBottom: "1.5rem",
+            padding: "1rem",
             background: "#fff3f3",
-            borderRadius: "4px",
+            border: "1px solid #ffcdd2",
+            borderRadius: "8px",
           }}
         >
           {error}
@@ -132,17 +172,18 @@ export function SearchFormPage() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "1rem",
-          marginBottom: "1.5rem",
+          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+          gap: "16px",
+          marginBottom: "20px",
         }}
       >
         <div>
           <label
             style={{
               display: "block",
-              marginBottom: "0.3rem",
-              fontWeight: 600,
+              marginBottom: "6px",
+              fontWeight: "600",
+              fontSize: "14px",
             }}
           >
             ИНН компании
@@ -152,15 +193,21 @@ export function SearchFormPage() {
             placeholder="10 или 12 цифр"
             value={inn}
             onChange={(e) => setInn(e.target.value.replace(/\D/g, ""))}
-            style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
+            style={{
+              width: "100%",
+              padding: "8px 12px",
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+            }}
           />
         </div>
         <div>
           <label
             style={{
               display: "block",
-              marginBottom: "0.3rem",
-              fontWeight: 600,
+              marginBottom: "6px",
+              fontWeight: "600",
+              fontSize: "14px",
             }}
           >
             С даты
@@ -169,15 +216,16 @@ export function SearchFormPage() {
             type="date"
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
-            style={{ width: "100%", padding: "8px" }}
+            style={{ width: "100%", padding: "8px", borderRadius: "4px" }}
           />
         </div>
         <div>
           <label
             style={{
               display: "block",
-              marginBottom: "0.3rem",
-              fontWeight: 600,
+              marginBottom: "6px",
+              fontWeight: "600",
+              fontSize: "14px",
             }}
           >
             По дату
@@ -186,83 +234,80 @@ export function SearchFormPage() {
             type="date"
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
-            style={{ width: "100%", padding: "8px" }}
+            style={{ width: "100%", padding: "8px", borderRadius: "4px" }}
           />
         </div>
       </div>
 
       <div
         style={{
-          background: "#f9f9f9",
-          padding: "1rem",
-          borderRadius: "6px",
-          marginBottom: "1.5rem",
+          background: "#f5f5f5",
+          padding: "16px",
+          borderRadius: "8px",
+          marginBottom: "24px",
         }}
       >
-        <h3 style={{ margin: 0, fontSize: "16px", marginBottom: "0.75rem" }}>
+        <h3
+          style={{
+            margin: 0,
+            fontSize: "16px",
+            marginBottom: "12px",
+            color: "#333",
+          }}
+        >
           Фильтры контекста упоминания
         </h3>
-
-        <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
           <div>
             <label
-              style={{
-                display: "block",
-                fontWeight: 600,
-                marginBottom: "0.4rem",
-              }}
+              style={{ fontWeight: "600", display: "block", fontSize: "13px" }}
             >
-              Главная роль
-            </label>
-            <label>
               <input
                 type="checkbox"
                 checked={onlyMainRole}
                 onChange={(e) => setOnlyMainRole(e.target.checked)}
+                style={{ marginRight: "6px" }}
               />
               Только главная роль
             </label>
           </div>
-
           <div>
             <label
-              style={{
-                display: "block",
-                fontWeight: 600,
-                marginBottom: "0.4rem",
-              }}
+              style={{ fontWeight: "600", display: "block", fontSize: "13px" }}
             >
-              Риск-факторы
-            </label>
-            <label>
               <input
                 type="checkbox"
                 checked={onlyWithRiskFactors}
                 onChange={(e) => setOnlyWithRiskFactors(e.target.checked)}
+                style={{ marginRight: "6px" }}
               />
               Только с риск-факторами
             </label>
           </div>
-
           <div>
             <label
               style={{
+                fontWeight: "600",
                 display: "block",
-                fontWeight: 600,
-                marginBottom: "0.4rem",
+                fontSize: "13px",
+                marginRight: "8px",
               }}
             >
-              Тональность
+              Тональность:
+              <select
+                value={tonality}
+                onChange={(e) => setTonality(e.target.value as TonalityOption)}
+                style={{
+                  marginLeft: "6px",
+                  padding: "4px 8px",
+                  borderRadius: "4px",
+                }}
+              >
+                <option value="any">Любая</option>
+                <option value="negative">Негативная</option>
+                <option value="positive">Позитивная</option>
+              </select>
             </label>
-            <select
-              value={tonality}
-              onChange={(e) => setTonality(e.target.value as TonalityOption)}
-              style={{ padding: "6px 8px" }}
-            >
-              <option value="any">Любая (any)</option>
-              <option value="negative">Негативная (negative)</option>
-              <option value="positive">Позитивная (positive)</option>
-            </select>
           </div>
         </div>
       </div>
@@ -270,8 +315,16 @@ export function SearchFormPage() {
       <button
         onClick={handleSearch}
         disabled={loading}
-        className="blue-button"
-        style={{ padding: "12px 24px", fontSize: "16px" }}
+        style={{
+          backgroundColor: loading ? "#ccc" : "#007bff",
+          color: "#fff",
+          padding: "12px 24px",
+          fontSize: "16px",
+          border: "none",
+          borderRadius: "6px",
+          cursor: loading ? "not-allowed" : "pointer",
+          transition: "background 0.2s",
+        }}
       >
         {loading ? "Поиск..." : "Найти публикации"}
       </button>

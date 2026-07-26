@@ -50,7 +50,7 @@ export type TonalityOption = "any" | "negative" | "positive";
 
 export interface TargetSearchEntity {
   type: "company" | "suggestedPersons";
-  inn?: string | null;
+  inn?: string;
   sparkId?: number | null;
   entityId?: number | null;
   inBusinessNews?: boolean | null;
@@ -68,16 +68,24 @@ export interface SearchPayload {
       onlyMainRole: boolean;
       onlyWithRiskFactors: boolean;
       tonality: TonalityOption;
-      riskFactors: { and: any[]; or: any[]; not: any[] };
-      themes: { and: []; or: []; not: [] };
+      riskFactors: { and: unknown[]; or: unknown[]; not: unknown[] };
+      themes: { and: unknown[]; or: unknown[]; not: unknown[] };
     };
     searchEntitiesFilter: {
-      and: any[];
-      or: any[];
-      not: any[];
+      and: unknown[];
+      or: unknown[];
+      not: unknown[];
     };
-    locationsFilter: { and: any[]; or: any[]; not: any[] };
-    themesFilter: { and: any[]; or: any[]; not: any[] };
+    locationsFilter: {
+      and: unknown[];
+      or: unknown[];
+      not: unknown[];
+    };
+    themesFilter: {
+      and: unknown[];
+      or: unknown[];
+      not: unknown[];
+    };
   };
   searchArea: {
     includedSources: number[];
@@ -85,7 +93,7 @@ export interface SearchPayload {
     includedSourceGroups: number[];
     excludedSourceGroups: number[];
     includedDistributionMethods: number[];
-    excludedDistributionMethods: [];
+    excludedDistributionMethods: number[];
   };
   attributeFilters: {
     excludeTechNews: boolean;
@@ -97,6 +105,20 @@ export interface SearchPayload {
   limit: number;
   sortType: "None" | "Influence" | "Date";
   sortDirectionType: "Asc" | "Desc";
+}
+
+export interface HistogramPoint {
+  date: string;
+  value: number;
+}
+
+export interface HistogramItem {
+  histogramType: "totalDocuments" | "riskFactors";
+  data: HistogramPoint[];
+}
+
+export interface HistogramsResponse {
+  data: HistogramItem[];
 }
 
 // --- Типы ScanDoc (полная публикация) ---

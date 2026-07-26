@@ -1,124 +1,23 @@
 // src/pages/ResultsPage.tsx
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-// apiClient пока не нужен — используем моки для этапа вёрстки
-// import apiClient from '../api/client';
-
-import type {
-  SearchResponse,
-  EventFiltersInfo,
-  AnalyticsResponse,
-} from "../types";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchResults } from "../hooks/useSearchResults";
 import { SearchStats } from "../components/SearchStats";
 import { PublicationCard } from "../components/PublicationCard";
 
-// Импортируем моковые данные из отдельного файла
-import { MOCK_SEARCH_RESPONSE, MOCK_ANALYTICS } from "../mock/mockData";
-
-// Моковые лимиты (можно тоже вынести в mockData, если нужно)
-const MOCK_LIMITS: EventFiltersInfo = {
-  usedCompanyCount: 3,
-  companyLimit: 10,
-};
-
 function ResultsPage() {
   const [searchParams] = useSearchParams();
-  // Если в URL нет ИНН — подставим тестовый, чтобы страница не была пустой при вёрстке
+  const navigate = useNavigate();
+
   const inn = searchParams.get("inn") || "7701234567";
 
-  const [results, setResults] = useState<SearchResponse | null>(null);
-  const [limits, setLimits] = useState<EventFiltersInfo | null>(null);
-  const [stats, setStats] = useState<AnalyticsResponse | null>(null);
+  const { results, limits, stats, histograms, loading, error } =
+    useSearchResults(inn);
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!inn) {
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    // --- ЭТАП ВЁРСТКИ: используем моки из src/mocks/mockData.ts ---
-    setTimeout(() => {
-      setLimits(MOCK_LIMITS);
-      setResults(MOCK_SEARCH_RESPONSE);
-      setStats(MOCK_ANALYTICS);
-      setLoading(false);
-    }, 400); // имитация небольшой задержки сети
-
-    /*
-    // ОРИГИНАЛЬНАЯ ЛОГИКА С API (раскомментировать на этапе подключения бэкенда):
-    const payload = {
-      issueDateInterval: {
-        startDate: new Date().toISOString(),
-        endDate: new Date().toISOString(),
-      },
-      searchContext: {
-        targetSearchEntitiesContext: {
-          targetSearchEntities: [{ type: 'company', inn }],
-          onlyMainRole: true,
-          onlyWithRiskFactors: false,
-          tonality: 'any',
-          riskFactors: { and: [], or: [], not: [] },
-          themes: { and: [], or: [], not: [] },
-        },
-        searchEntitiesFilter: {
-          and: [{ type: 'company' }],
-          or: [],
-          not: [],
-        },
-        locationsFilter: { and: [], or: [], not: [] },
-        themesFilter: { and: [], or: [], not: [] },
-      },
-      searchArea: {
-        includedSources: [],
-        excludedSources: [],
-        includedSourceGroups: [],
-        excludedSourceGroups: [],
-        includedDistributionMethods: [],
-        excludedDistributionMethods: [],
-      },
-      attributeFilters: {
-        excludeTechNews: true,
-        excludeAnnouncements: true,
-        excludeDigests: true,
-      },
-      similarMode: 'None',
-      intervalType: 'Day',
-      limit: 50,
-      sortType: 'None',
-      sortDirectionType: 'Desc',
-    };
-
-    Promise.all([
-      apiClient
-        .get<{ eventFiltersInfo: EventFiltersInfo }>('/api/v1/account/info')
-        .then((res) => res.data.eventFiltersInfo),
-      apiClient.post<SearchResponse>('/api/v1/objectsearch', payload),
-      apiClient.get<AnalyticsResponse>('/api/v1/analytics').catch(() => null),
-    ])
-      .then(([limitsData, searchData, statsData]) => {
-        setLimits(limitsData);
-        setResults(searchData);
-        setStats(statsData);
-        setLoading(false);
-      })
-      .catch((err) => {
-        let msg = 'Не удалось загрузить данные.';
-        if (err.response?.data?.message) {
-          msg = err.response.data.message;
-        } else if (err.message) {
-          msg = err.message;
-        }
-        setError(msg);
-        setLoading(false);
-      });
-    */
-  }, [inn]);
+  // Обработка 401: перенаправление из компонента (разрешено здесь)
+  if (error === "UNAUTHORIZED") {
+    navigate("/auth", { replace: true });
+    return null; // ничего не рендерим, пользователь уже уходит
+  }
 
   if (loading) {
     return (
@@ -131,13 +30,13 @@ function ResultsPage() {
     );
   }
 
-  if (error) {
+  if (!loading && error) {
     return (
       <div className="container">
         <h1 style={{ marginBottom: "1rem", fontSize: "20px" }}>
           Результаты поиска
         </h1>
-        <div style={{ color: "red", marginBottom: "1rem" }}>{error}</div>
+        <div style={{ color: "#d32f2f", marginBottom: "1rem" }}>{error}</div>
         <button
           onClick={() => window.location.reload()}
           className="blue-button"
@@ -149,13 +48,21 @@ function ResultsPage() {
     );
   }
 
+  const getHistogramData = (type: "totalDocuments" | "riskFactors") => {
+    if (!histograms?.data) return [];
+    const item = histograms.data.find((h) => h.histogramType === type);
+    return item?.data || [];
+  };
+
+  const totalDocs = getHistogramData("totalDocuments");
+  const riskFactors = getHistogramData("riskFactors");
+
   return (
     <div className="container">
       <h1 style={{ marginBottom: "1.5rem", fontSize: "20px" }}>
         Результаты поиска по ИНН {inn}
       </h1>
 
-      {/* Блок лимитов */}
       {limits && (
         <div
           style={{
@@ -176,10 +83,80 @@ function ResultsPage() {
         </div>
       )}
 
-      {/* Блок статистики */}
       {stats && <SearchStats points={stats.points} />}
 
-      {/* Список публикаций через PublicationCard */}
+      {totalDocs.length > 0 || riskFactors.length > 0 ? (
+        <div style={{ marginBottom: "2rem" }}>
+          <h3 style={{ marginBottom: "0.75rem" }}>
+            Динамика публикаций по месяцам
+          </h3>
+
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontSize: "0.9rem",
+              marginBottom: "1rem",
+            }}
+          >
+            <thead>
+              <tr>
+                <th style={{ border: "1px solid #ccc", padding: "0.4rem" }}>
+                  Дата
+                </th>
+                <th style={{ border: "1px solid #ccc", padding: "0.4rem" }}>
+                  Всего публикаций
+                </th>
+                <th style={{ border: "1px solid #ccc", padding: "0.4rem" }}>
+                  Риск‑факторы
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {totalDocs.map((point, idx) => {
+                const riskPoint = riskFactors[idx] || {
+                  date: point.date,
+                  value: 0,
+                };
+                return (
+                  <tr key={point.date}>
+                    <td style={{ border: "1px solid #ccc", padding: "0.4rem" }}>
+                      {new Date(point.date).toLocaleDateString("ru-RU", {
+                        year: "numeric",
+                        month: "long",
+                      })}
+                    </td>
+                    <td
+                      style={{
+                        border: "1px solid #ccc",
+                        padding: "0.4rem",
+                        textAlign: "right",
+                      }}
+                    >
+                      {point.value}
+                    </td>
+                    <td
+                      style={{
+                        border: "1px solid #ccc",
+                        padding: "0.4rem",
+                        textAlign: "right",
+                        color: riskPoint.value > 0 ? "#d32f2f" : "inherit",
+                      }}
+                    >
+                      {riskPoint.value}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div style={{ marginBottom: "2rem", color: "#888" }}>
+          Нет данных для построения гистограммы.
+        </div>
+      )}
+
       {!results || results.items.length === 0 ? (
         <p>По заданным параметрам публикаций не найдено.</p>
       ) : (
