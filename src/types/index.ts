@@ -50,7 +50,7 @@ export type TonalityOption = "any" | "negative" | "positive";
 
 export interface TargetSearchEntity {
   type: "company" | "suggestedPersons";
-  inn?: string;
+  inn?: string | number; // Теперь поддерживает и строку, и число
   sparkId?: number | null;
   entityId?: number | null;
   inBusinessNews?: boolean | null;
@@ -107,18 +107,47 @@ export interface SearchPayload {
   sortDirectionType: "Asc" | "Desc";
 }
 
+// 🔥 Типы строго под твой ответ API
 export interface HistogramPoint {
-  date: string;
-  value: number;
+  date: string; // "2020-11-01T03:00:00+03:00"
+  value: number; // 8, 6, 0, 1
 }
 
-export interface HistogramItem {
-  histogramType: "totalDocuments" | "riskFactors";
+export interface HistogramSeries {
   data: HistogramPoint[];
+  histogramType: "totalDocuments" | "riskFactors";
 }
 
-export interface HistogramsResponse {
-  data: HistogramItem[];
+export interface HistogramResponse {
+  data: HistogramSeries[];
+}
+
+export interface HistogramSearchPayload {
+  issueDateInterval: {
+    startDate: string;
+    endDate: string;
+  };
+  searchContext: {
+    targetSearchEntitiesContext: {
+      targetSearchEntities: TargetSearchEntity[];
+      onlyMainRole: boolean;
+      onlyWithRiskFactors: boolean;
+      tonality: TonalityOption;
+      riskFactors: { and: unknown[]; or: unknown[]; not: unknown[] };
+      themes: { and: unknown[]; or: unknown[]; not: unknown[] };
+    };
+  };
+  intervalType: "Day" | "Week" | "Month"; // Тип остаётся общим для типобезопасности
+  histogramTypes: ("totalDocuments" | "riskFactors")[];
+  similarMode: "None" | "Cluster" | "Document";
+  limit?: number;
+  sortType?: "issueDate" | "Influence" | "Date";
+  sortDirectionType?: "Asc" | "Desc";
+  attributeFilters?: {
+    excludeTechNews?: boolean;
+    excludeAnnouncements?: boolean;
+    excludeDigests?: boolean;
+  };
 }
 
 // --- Типы ScanDoc (полная публикация) ---
