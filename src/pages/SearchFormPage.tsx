@@ -3,9 +3,12 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import apiClient from "../api/client";
 import type {
-  HistogramSearchPayload,
-  TonalityOption,
   TargetSearchEntity,
+  TonalityOption,
+  SearchPayload,
+  HistogramSearchPayload,
+  SearchResponse,
+  ScanDoc,
   HistogramResponse,
 } from "../types";
 import axios from "axios";
@@ -20,36 +23,34 @@ export function SearchFormPage() {
   const [onlyWithRiskFactors, setOnlyWithRiskFactors] = useState(false);
   const [tonality, setTonality] = useState<TonalityOption>("any");
 
+  // Лимит — количество документов к выдаче (1–1000)
+  const [limit, setLimit] = useState<string>("20");
+
   const intervalType = "Month" as const;
+  // Важно: не делаем readonly-массив, а просто обычный массив — тогда приведение не нужно
+  const histogramTypes = ["totalDocuments"] as (
+    | "totalDocuments"
+    | "riskFactors"
+  )[];
+  const similarMode = "None" as const;
 
-  // Всегда запрашиваем только totalDocuments — чекбоксы удалены
-  const histogramTypes: ("totalDocuments" | "riskFactors")[] = [
-    "totalDocuments",
-  ];
-
-  const [similarMode] = useState<"None" | "Cluster" | "Document">("None");
-  const [limit, setLimit] = useState<string>("100");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [responseData, setResponseData] = useState<HistogramResponse | null>(
+  const [histogramData, setHistogramData] = useState<HistogramResponse | null>(
     null,
   );
+  const [searchResult, setSearchResult] = useState<SearchResponse | null>(null);
+  const [documents, setDocuments] = useState<ScanDoc[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
   const [, setSearchParams] = useSearchParams();
 
-  /**
-   * Форматирует дату начала интервала: день с 00:00:00.000 в UTC (Z)
-   */
   const formatStartDate = (dateStr?: string): string => {
     const d = dateStr ? new Date(dateStr) : new Date();
     d.setHours(0, 0, 0, 0);
     return d.toISOString();
   };
 
-  /**
-   * Форматирует дату конца интервала: день с 23:59:59.999 в UTC (Z)
-   */
   const formatEndDate = (dateStr?: string): string => {
     const d = dateStr ? new Date(dateStr) : new Date();
     d.setHours(23, 59, 59, 999);
@@ -58,17 +59,13 @@ export function SearchFormPage() {
 
   const handleSearch = async () => {
     setError(null);
-    setResponseData(null);
+    setHistogramData(null);
+    setSearchResult(null);
+    setDocuments([]);
 
     const innCleanStr = inn.replace(/\D/g, "");
     if (!innCleanStr) {
       setError("Укажите ИНН компании (только цифры).");
-      return;
-    }
-
-    const innValue = Number(innCleanStr);
-    if (Number.isNaN(innValue)) {
-      setError("ИНН должен содержать только цифры.");
       return;
     }
 
@@ -80,105 +77,168 @@ export function SearchFormPage() {
 
     setLoading(true);
 
+    // Базовый targetSearchEntitiesContext (без лишних полей)
     const targetEntity: TargetSearchEntity = {
       type: "company",
-      inn: innValue,
+      inn: innCleanStr,
       sparkId: null,
       entityId: null,
-      maxFullness: true,
       inBusinessNews: null,
+      maxFullness: true,
     };
 
-    const payload: HistogramSearchPayload = {
-      issueDateInterval: {
-        startDate: formatStartDate(fromDate),
-        endDate: formatEndDate(toDate),
+    const searchContext = {
+      targetSearchEntitiesContext: {
+        targetSearchEntities: [targetEntity],
+        onlyMainRole,
+        onlyWithRiskFactors,
+        tonality,
+        riskFactors: { and: [], or: [], not: [] },
+        themes: { and: [], or: [], not: [] },
       },
-      searchContext: {
-        targetSearchEntitiesContext: {
-          targetSearchEntities: [targetEntity],
-          onlyMainRole,
-          onlyWithRiskFactors,
-          tonality,
-          riskFactors: { and: [], or: [], not: [] },
-          themes: { and: [], or: [], not: [] },
-        },
-      },
-      intervalType,
-      histogramTypes,
-      similarMode,
-      limit: limitNum,
-      sortType: "issueDate",
-      sortDirectionType: "Asc",
-      attributeFilters: {
-        excludeTechNews: true,
-        excludeAnnouncements: true,
-        excludeDigests: true,
-      },
+      searchEntitiesFilter: { and: [], or: [], not: [] },
+      locationsFilter: { and: [], or: [], not: [] },
+      themesFilter: { and: [], or: [], not: [] },
     };
 
-    console.log("📦 Payload перед отправкой:", {
-      histogramTypes: payload.histogramTypes,
-      issueDateInterval: payload.issueDateInterval,
-    });
+    const issueDateInterval = {
+      startDate: formatStartDate(fromDate),
+      endDate: formatEndDate(toDate),
+    };
 
     try {
-      const response = await apiClient.post<HistogramResponse>(
-        "/api/v1/objectsearch/histograms",
-        payload,
-      );
+      console.log("🚀 Начинаем параллельные запросы...");
 
-      console.log("✅ Успешный ответ API:", response.data);
-      setResponseData(response.data);
+      const [histogramRes, searchRes] = await Promise.all([
+        // Гистограмма
+        apiClient.post<HistogramResponse>("/api/v1/objectsearch/histograms", {
+          issueDateInterval,
+          searchContext,
+          intervalType: "month" as const,
+          histogramTypes: ["totalDocuments"] as const,
+          similarMode: "None",
+          limit: 12,
+          sortType: "issueDate",
+          sortDirectionType: "asc",
+          attributeFilters: {
+            excludeTechNews: true,
+            excludeAnnouncements: true,
+            excludeDigests: true,
+          },
+        }),
 
-      setSearchParams({
-        inn: innCleanStr,
-        view: "histogram",
-      });
+        // Поиск публикаций
+        apiClient.post<SearchResponse>("/api/v1/objectsearch", {
+          issueDateInterval,
+          searchContext,
+          limit: limitNum,
+          offset: 0,
+          // Важно: именно эти значения, как в примере API
+          sortType: "sourceInfluence",
+          sortDirectionType: "desc",
+          intervalType: "month" as const,
+          similarMode: "None",
+          attributeFilters: {
+            excludeTechNews: true,
+            excludeAnnouncements: true,
+            excludeDigests: true,
+          },
+          searchArea: {
+            includedSources: [],
+            excludedSources: [],
+            includedSourceGroups: [],
+            excludedSourceGroups: [],
+            includedDistributionMethods: [],
+            excludedDistributionMethods: [],
+          },
+        }),
+      ]);
+
+      console.log("✅ Запросы успешны");
+      console.log("📊 Гистограмма:", histogramRes.data);
+      console.log("🔍 Поиск:", searchRes.data);
+
+      setHistogramData(histogramRes.data);
+      setSearchResult(searchRes.data);
+
+      // ЗАЩИТА: проверяем, что items — это массив, прежде чем итерировать
+      const items = searchRes.data?.items;
+      if (!Array.isArray(items)) {
+        console.warn(
+          "⚠️ items не является массивом. Полный ответ:",
+          searchRes.data,
+        );
+        setError(
+          "Сервер вернул неожиданный формат данных (поле items отсутствует или не массив). Проверьте вкладку Network.",
+        );
+        // Не ставим view=results, потому что данные невалидны
+        return;
+      }
+
+      if (items.length > 0) {
+        const first10EncodedIds = items.slice(0, 10).map((i) => i.encodedId);
+        await loadDocumentsByIds(first10EncodedIds);
+      } else {
+        console.log(
+          "ℹ️ Найдено 0 публикаций — это нормально, если в диапазоне нет данных.",
+        );
+      }
+
+      // Обновляем URL только если всё прошло успешно
+      setSearchParams({ inn: innCleanStr, view: "results" });
+      console.log("🔗 URL обновлён: view=results");
     } catch (err: unknown) {
-      console.error("❌ Ошибка запроса:", err);
-      let msg = "Не удалось получить данные гистограммы.";
+      console.error("❌ Ошибка параллельных запросов:", err);
 
-      if (axios.isAxiosError(err)) {
-        const status = err.response?.status;
-        const data = err.response?.data;
-
-        if (status === 401) {
-          msg = "Ошибка авторизации: токен недействителен или отсутствует.";
-        } else if (status === 500 && data) {
-          if (typeof data === "string") {
-            msg = data;
-          } else if (data !== null && typeof data === "object") {
-            const obj = data as Record<string, unknown>;
-            if ("message" in obj && typeof obj.message === "string") {
-              msg = obj.message;
-            } else if ("details" in obj) {
-              const details = obj.details;
-              if (typeof details === "string") {
-                msg = details;
-              } else {
-                msg = String(details);
-              }
-            } else {
-              msg = JSON.stringify(data);
-            }
-          }
-        } else if (data && typeof data === "string") {
-          msg = data;
-        }
+      let msg = "Не удалось выполнить поиск.";
+      if (axios.isAxiosError(err) && err.response?.data) {
+        msg =
+          typeof err.response.data === "string"
+            ? err.response.data
+            : JSON.stringify(err.response.data, null, 2);
       } else if (err instanceof Error) {
         msg = err.message;
       }
-
       setError(msg);
     } finally {
       setLoading(false);
     }
   };
 
-  // Считаем суммарное количество документов автоматически
-  const totalDocuments = responseData
-    ? responseData.data
+  const loadDocumentsByIds = async (ids: string[]) => {
+    if (ids.length === 0) return;
+
+    try {
+      const res = await apiClient.post<{ items: ScanDoc[] }>(
+        "/api/v1/documents",
+        {
+          ids,
+        },
+      );
+      setDocuments((prev) => [...prev, ...res.data.items]);
+    } catch (e: unknown) {
+      console.error("❌ Ошибка загрузки содержимого документов:", e);
+      setError("Не удалось загрузить содержимое публикаций.");
+    }
+  };
+
+  const handleShowMore = async () => {
+    if (!searchResult) return;
+
+    const alreadyLoadedCount = documents.length;
+    const nextOffset = alreadyLoadedCount;
+
+    const nextIds = searchResult.items
+      .slice(nextOffset, nextOffset + 10)
+      .map((i) => i.encodedId);
+
+    if (nextIds.length === 0) return;
+
+    await loadDocumentsByIds(nextIds);
+  };
+
+  const totalDocuments = histogramData
+    ? histogramData.data
         .filter((s) => s.histogramType === "totalDocuments")
         .flatMap((s) => s.data)
         .reduce((sum, point) => sum + (point.value ?? 0), 0)
@@ -186,7 +246,7 @@ export function SearchFormPage() {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Найдите необходимые данные в пару кликов</h1>
+      <h1 className={styles.title}>Поиск данных по компании</h1>
 
       {error && (
         <div className={styles.errorBlock}>
@@ -229,14 +289,14 @@ export function SearchFormPage() {
 
         <div className={styles.formField}>
           <label className={styles.label}>
-            Количество документов к выдаче*
+            Количество документов в выдаче (1–1000)*
           </label>
           <input
             type="number"
             min={1}
             max={1000}
             value={limit}
-            placeholder="От 1 до 1000"
+            placeholder="1–1000"
             onChange={(e) => {
               const val = e.target.value;
               if (val === "") {
@@ -244,14 +304,15 @@ export function SearchFormPage() {
                 return;
               }
               const num = Number(val);
-              if (!Number.isNaN(num)) {
-                if (num < 1) setLimit("1");
-                else if (num > 1000) setLimit("1000");
-                else setLimit(val);
-              }
+              if (!Number.isNaN(num) && num >= 1 && num <= 1000)
+                setLimit(String(num));
             }}
             className={styles.input}
           />
+          <small className={styles.hint}>
+            Это количество записей, которые будут найдены и доступны для
+            подгрузки. Гистограмма строится отдельно (шаг — месяц).
+          </small>
         </div>
       </div>
 
@@ -294,52 +355,64 @@ export function SearchFormPage() {
       </div>
 
       <button onClick={handleSearch} disabled={loading} className={styles.btn}>
-        {loading ? (
-          <>
-            <span className={styles.spinner}>⏳</span> Загрузка гистограммы...
-          </>
-        ) : (
-          "Построить график"
-        )}
+        {loading ? "⏳ Загрузка…" : "Найти и построить"}
       </button>
 
-      {/* Блок превью данных (для отладки) */}
-      {responseData && (
+      {/* Блок гистограммы */}
+      {histogramData && (
         <div className={styles.previewBlock}>
-          <h3 className={styles.previewTitle}>Данные для графика (превью)</h3>
-
-          {responseData.data.some(
-            (s) => s.histogramType === "totalDocuments",
-          ) && (
-            <div className={styles.previewItem}>
-              <h4 className={styles.previewSubtitle}>
-                Всего документов (серии)
-              </h4>
-              <pre className={styles.previewData}>
-                {JSON.stringify(
-                  responseData.data.find(
-                    (s) => s.histogramType === "totalDocuments",
-                  )?.data,
-                  null,
-                  2,
-                )}
-              </pre>
-            </div>
-          )}
-
-          {!responseData.data.length && (
-            <p className={styles.emptyMessage}>
-              Данные не получены: сервер вернул пустой массив серий. Проверьте
-              логи сервера и консоль браузера.
-            </p>
-          )}
-
-          <p className={styles.note}>
-            В реальном проекте эти данные нужно передать в компонент графика
-            (например, Recharts / Chart.js).
+          <h3 className={styles.previewTitle}>
+            Гистограмма (статистика по месяцам)
+          </h3>
+          <p>
+            Всего документов за выбранный период:{" "}
+            <strong>{totalDocuments.toLocaleString()}</strong>
           </p>
+          {/* Сюда можно вставить график (Recharts/Chart.js) */}
+          <pre className={styles.previewData}>
+            {JSON.stringify(histogramData.data, null, 2)}
+          </pre>
         </div>
       )}
+
+      {/* Блок списка публикаций */}
+      <div className={styles.previewBlock}>
+        <h3 className={styles.previewTitle}>Список публикаций</h3>
+
+        {searchResult && (
+          <div className={styles.meta}>
+            Найдено публикаций:{" "}
+            <strong>{searchResult.items.length.toLocaleString()}</strong>.
+            Загружено: <strong>{documents.length}</strong>.
+          </div>
+        )}
+
+        <ul className={styles.list}>
+          {documents.length === 0 ? (
+            <li className={styles.emptyMessage}>Нет загруженных публикаций</li>
+          ) : (
+            documents.map((doc) => (
+              <li key={doc.id} className={styles.item}>
+                <h4 className={styles.itemTitle}>{doc.title.text}</h4>
+                <div className={styles.itemMeta}>
+                  <span>
+                    Дата: {new Date(doc.issueDate).toLocaleDateString()}
+                  </span>
+                  {" • "}
+                  <span>{doc.source.name}</span>
+                </div>
+                <p className={styles.snippet}>{doc.content.markup}</p>
+              </li>
+            ))
+          )}
+        </ul>
+
+        {searchResult && documents.length < searchResult.items.length && (
+          <button onClick={handleShowMore} className={styles.btnSecondary}>
+            Показать больше
+          </button>
+        )}
+      </div>
     </div>
   );
 }

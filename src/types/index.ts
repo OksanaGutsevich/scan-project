@@ -29,7 +29,7 @@ export interface AnalyticsResponse {
   points: IntervalPoint[];
 }
 
-// Типы для поиска
+// Типы для поиска POST /api/v1/objectsearch
 export interface SearchResultItem {
   encodedId: string;
   influence: number;
@@ -57,6 +57,15 @@ export interface TargetSearchEntity {
   maxFullness?: boolean | null;
 }
 
+export type SortTypeOption =
+  | "None"
+  | "sourceInfluence"
+  | "issueDate"
+  | "relevance";
+
+export type SortDirectionOption = "asc" | "desc";
+
+export type IntervalTypeOption = "day" | "week" | "month";
 export interface SearchPayload {
   issueDateInterval: {
     startDate: string;
@@ -100,11 +109,11 @@ export interface SearchPayload {
     excludeAnnouncements: boolean;
     excludeDigests: boolean;
   };
-  similarMode: "None" | "Cluster" | "Document";
-  intervalType: "Day" | "Week" | "Month";
+  similarMode: "None" | "Cluster" | "Document" | "duplicates"; // добавь "duplicates"
+  intervalType: IntervalTypeOption;
   limit: number;
-  sortType: "None" | "Influence" | "Date";
-  sortDirectionType: "Asc" | "Desc";
+  sortType: SortTypeOption; // исправлено
+  sortDirectionType: SortDirectionOption; // исправлено
 }
 
 // 🔥 Типы строго под твой ответ API
@@ -137,12 +146,12 @@ export interface HistogramSearchPayload {
       themes: { and: unknown[]; or: unknown[]; not: unknown[] };
     };
   };
-  intervalType: "Day" | "Week" | "Month"; // Тип остаётся общим для типобезопасности
+  intervalType: IntervalTypeOption; // исправлено
   histogramTypes: ("totalDocuments" | "riskFactors")[];
-  similarMode: "None" | "Cluster" | "Document";
+  similarMode: "None" | "Cluster" | "Document" | "duplicates";
   limit?: number;
-  sortType?: "issueDate" | "Influence" | "Date";
-  sortDirectionType?: "Asc" | "Desc";
+  sortType?: SortTypeOption; // если используется
+  sortDirectionType?: SortDirectionOption; // если используется
   attributeFilters?: {
     excludeTechNews?: boolean;
     excludeAnnouncements?: boolean;
