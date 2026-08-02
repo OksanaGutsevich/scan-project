@@ -1,104 +1,109 @@
 // src/components/PublicationCard.tsx
-import type { SearchResultItem, ScanDoc } from "../types";
-import { Link } from "react-router-dom";
+import type { ScanDoc } from "../types";
+import styles from "./PublicationCard.module.css";
 
-interface PublicationCardProps {
-  item: SearchResultItem;
-  // Если у тебя уже есть полные данные (например, из кэша) — можно передавать scanDoc
-  scanDoc?: ScanDoc | null;
+// Утилита: декодируем HTML-сущности и вырезаем XML-теги
+const stripXmlTags = (markup: string): string => {
+  if (!markup) return "";
+
+  // 1. Декодируем сущности через DOM (безопасно для браузера)
+  const tempDiv = document.createElement("div");
+  tempDiv.innerHTML = markup;
+  const decoded = tempDiv.textContent ?? "";
+
+  // 2. Удаляем все теги
+  return decoded.replace(/<[^>]*>/g, "").trim();
+};
+
+// Вспомогательная функция: вытаскивает src из первого img (учитывает экранированные &lt;img)
+function extractImageUrl(markup: string): string | null {
+  // Сначала пробуем найти экранированный вариант (частый случай от API)
+  const imgMatch = markup.match(/&lt;img[^&]*src=["']([^"']+)["']/i);
+  if (imgMatch) {
+    return imgMatch[1];
+  }
+
+  // Если не нашли, пробуем обычный вариант (на случай, если API вдруг отдаст без экранирования)
+  const fallbackMatch = markup.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return fallbackMatch ? fallbackMatch[1] : null;
 }
 
-export const PublicationCard = ({ item, scanDoc }: PublicationCardProps) => {
-  const title = scanDoc?.title.text || "Без заголовка";
-  const sourceName = scanDoc?.source.name || "Неизвестный источник";
-  const issueDate = scanDoc?.issueDate
-    ? new Date(scanDoc.issueDate).toLocaleDateString("ru-RU")
-    : "Дата не указана";
+interface PublicationCardProps {
+  doc: ScanDoc;
+}
+
+export const PublicationCard = ({ doc }: PublicationCardProps) => {
+  const dateStr = doc.issueDate
+    ? new Date(doc.issueDate).toLocaleDateString("ru-RU")
+    : "—";
+
+  const sourceName = doc.source?.name ?? "Неизвестный источник";
+  const sourceUrl = doc.url ?? "#";
+
+  const imageUrl = doc.content?.markup
+    ? extractImageUrl(doc.content.markup)
+    : null;
+
+  const rawText = doc.content?.markup ?? "";
+  const cleanText = stripXmlTags(rawText);
+  const previewText = cleanText.substring(0, 150);
+
+  const wordCount =
+    typeof doc.attributes?.wordCount === "number"
+      ? doc.attributes.wordCount
+      : 0;
 
   return (
-    <Link
-      to={`/publication/${item.encodedId}`}
-      style={{ textDecoration: "none", color: "inherit" }}
-    >
-      <div
-        style={{
-          border: "1px solid #ccc",
-          padding: "1rem",
-          borderRadius: "6px",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-          transition: "transform 0.2s, box-shadow 0.2s",
-          cursor: "pointer",
-        }}
-        onMouseEnter={(e) => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.transform = "translateY(-4px)";
-          el.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
-        }}
-        onMouseLeave={(e) => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.transform = "";
-          el.style.boxShadow = "";
-        }}
-      >
-        <h3
-          style={{
-            margin: 0,
-            fontSize: "18px",
-            marginBottom: "0.5rem",
-            lineHeight: 1.3,
-          }}
+    <article className={styles.publicationCard}>
+      {/* Первая строка: дата и ссылка на источник */}
+      <div className={styles.header}>
+        <span className={styles.date}>{dateStr}</span>
+        <span className={styles.separator}>•</span>
+        <a
+          href={sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.sourceLink}
         >
-          {title}
-        </h3>
-
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            flexWrap: "wrap",
-            marginBottom: "0.5rem",
-          }}
-        >
-          <span
-            style={{
-              fontSize: "12px",
-              padding: "2px 6px",
-              background: "#e0e0e0",
-              borderRadius: "4px",
-              color: "#333",
-            }}
-          >
-            {sourceName}
-          </span>
-          <span
-            style={{
-              fontSize: "12px",
-              color: "#666",
-            }}
-          >
-            {issueDate}
-          </span>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            marginTop: "0.5rem",
-            paddingTop: "0.5rem",
-            borderTop: "1px solid #eee",
-          }}
-        >
-          <div>
-            <small style={{ display: "block", color: "#888" }}>Влияние</small>
-            <strong style={{ fontSize: "14px" }}>{item.influence}</strong>
-          </div>
-          <div>
-            <small style={{ display: "block", color: "#888" }}>Похожие</small>
-            <strong style={{ fontSize: "14px" }}>{item.similarCount}</strong>
-          </div>
-        </div>
+          {sourceName}
+        </a>
       </div>
-    </Link>
+
+      {/* Название публикации */}
+      <h3 className={styles.title}>{doc.title?.text ?? "Без заголовка"}</h3>
+
+      {/* Картинка (если есть) */}
+      {imageUrl && (
+        <div className={styles.imageWrapper}>
+          <img
+            src={imageUrl}
+            alt="Иллюстрация к публикации"
+            className={styles.image}
+            loading="lazy"
+          />
+        </div>
+      )}
+
+      {/* Основная часть публикации (до 150 символов, остальное скрыто) */}
+      <p className={styles.preview}>
+        {previewText}
+        {cleanText.length > 150 ? "…" : ""}
+      </p>
+
+      <div className={styles.footer}>
+        {/* Количество слов */}
+        <span className={styles.meta}>{wordCount} слов</span>
+
+        {/* Кнопка «Читать в источнике» */}
+        <a
+          href={sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.readMoreButton}
+        >
+          Читать в источнике
+        </a>
+      </div>
+    </article>
   );
 };

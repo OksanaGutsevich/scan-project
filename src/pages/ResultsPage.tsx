@@ -10,6 +10,7 @@ import type {
   ScanDoc,
   HistogramResponse,
 } from "../types";
+import { PublicationCard } from "../components/PublicationCard";
 
 // --- Вспомогательные функции (вне компонента) ---
 const formatStartDate = (dateStr?: string): string => {
@@ -120,12 +121,42 @@ const loadData = async ({
   };
 };
 
-const loadDocumentsByIds = async (ids: string[]) => {
-  if (ids.length === 0) return [] as ScanDoc[];
-  const res = await apiClient.post<{ items: ScanDoc[] }>("/api/v1/documents", {
-    ids,
-  });
-  return res.data.items;
+const loadDocumentsByIds = async (ids: string[]): Promise<ScanDoc[]> => {
+  if (ids.length === 0) return [];
+
+  const res = await apiClient.post("/api/v1/documents", { ids });
+  // res.data — это массив вида: [{ ok: ScanDoc }, { fail: { errorCode, errorMessage } }, ...]
+
+  const raw = res.data;
+
+  if (!Array.isArray(raw)) {
+    console.warn("Неожиданный формат ответа от /documents:", raw);
+    return [];
+  }
+
+  return raw
+    .map((item: unknown) => {
+      if (typeof item !== "object" || item === null) {
+        return null;
+      }
+
+      const typed = item as {
+        ok?: ScanDoc;
+        fail?: { errorCode: string; errorMessage: string };
+      };
+
+      if ("ok" in typed && typed.ok) {
+        return typed.ok;
+      }
+      if ("fail" in typed && typed.fail) {
+        console.warn(
+          `Не удалось загрузить документ по ID: ${typed.fail.errorCode} — ${typed.fail.errorMessage}`,
+        );
+        return null;
+      }
+      return null;
+    })
+    .filter((doc): doc is ScanDoc => doc !== null);
 };
 
 // --- Блок гистограммы ---
@@ -183,50 +214,33 @@ function PublicationsBlock({
         Загружено: <strong>{documents.length}</strong>.
       </div>
 
-      <ul style={{ listStyle: "none", padding: 0 }}>
-        {documents.length === 0 ? (
-          <li style={{ padding: "12px", color: "#888" }}>
-            Нет загруженных публикаций
-          </li>
-        ) : (
-          documents.map((doc) => (
-            <li
-              key={doc.id}
-              style={{ padding: "12px 0", borderBottom: "1px solid #eee" }}
-            >
-              <h4 style={{ margin: "0 0 6px 0", fontSize: "15px" }}>
-                {doc.title.text || "Без заголовка"}
-              </h4>
-              <div
-                style={{ fontSize: "13px", color: "#666", marginBottom: "6px" }}
-              >
-                <span>
-                  Дата: {new Date(doc.issueDate).toLocaleDateString()}
-                </span>{" "}
-                {" • "}
-                <span>{doc.source?.name || "Неизвестный источник"}</span>
-              </div>
-              <p style={{ margin: 0, color: "#333", lineHeight: "1.4" }}>
-                {doc.content?.markup || "Нет текста публикации"}
-              </p>
-            </li>
-          ))
-        )}
-      </ul>
+      {documents.length === 0 ? (
+        <p style={{ padding: "12px", color: "#888" }}>
+          Нет загруженных публикаций
+        </p>
+      ) : (
+        <>
+          {documents.map((doc) => (
+            <PublicationCard key={doc.id} doc={doc} />
+          ))}
 
-      {hasMore && (
-        <button
-          onClick={() => onShowMore()}
-          style={{
-            marginTop: "16px",
-            padding: "8px 16px",
-            backgroundColor: "#f0f0f0",
-            border: "1px solid #ccc",
-            cursor: "pointer",
-          }}
-        >
-          Показать больше
-        </button>
+          {hasMore && (
+            <button
+              onClick={() => onShowMore()}
+              style={{
+                marginTop: "24px",
+                padding: "10px 20px",
+                backgroundColor: "#fff",
+                border: "1px solid #ccc",
+                color: "#333",
+                cursor: "pointer",
+                fontSize: "14px",
+              }}
+            >
+              Показать больше
+            </button>
+          )}
+        </>
       )}
     </section>
   );
