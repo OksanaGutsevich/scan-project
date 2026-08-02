@@ -1,29 +1,19 @@
 // src/components/PublicationCard.tsx
-import type { ScanDoc } from "../types";
+import type { ScanDoc, DocumentAttributes } from "../types";
 import styles from "./PublicationCard.module.css";
 
-// Утилита: декодируем HTML-сущности и вырезаем XML-теги
 const stripXmlTags = (markup: string): string => {
   if (!markup) return "";
-
-  // 1. Декодируем сущности через DOM (безопасно для браузера)
   const tempDiv = document.createElement("div");
   tempDiv.innerHTML = markup;
   const decoded = tempDiv.textContent ?? "";
-
-  // 2. Удаляем все теги
   return decoded.replace(/<[^>]*>/g, "").trim();
 };
 
-// Вспомогательная функция: вытаскивает src из первого img (учитывает экранированные &lt;img)
 function extractImageUrl(markup: string): string | null {
-  // Сначала пробуем найти экранированный вариант (частый случай от API)
   const imgMatch = markup.match(/&lt;img[^&]*src=["']([^"']+)["']/i);
-  if (imgMatch) {
-    return imgMatch[1];
-  }
+  if (imgMatch) return imgMatch[1];
 
-  // Если не нашли, пробуем обычный вариант (на случай, если API вдруг отдаст без экранирования)
   const fallbackMatch = markup.match(/<img[^>]+src=["']([^"']+)["']/i);
   return fallbackMatch ? fallbackMatch[1] : null;
 }
@@ -31,6 +21,17 @@ function extractImageUrl(markup: string): string | null {
 interface PublicationCardProps {
   doc: ScanDoc;
 }
+
+// Вспомогательная функция: возвращает человекопонятный тип публикации
+const getPublicationTypeLabel = (attrs?: DocumentAttributes): string | null => {
+  if (!attrs) return null;
+
+  if (attrs.isTechNews) return "Техническая новость";
+  if (attrs.isAnnouncement) return "Анонс";
+  if (attrs.isDigest) return "Сводка новостей";
+
+  return null; // если ничего не подошло
+};
 
 export const PublicationCard = ({ doc }: PublicationCardProps) => {
   const dateStr = doc.issueDate
@@ -53,9 +54,11 @@ export const PublicationCard = ({ doc }: PublicationCardProps) => {
       ? doc.attributes.wordCount
       : 0;
 
+  // Получаем читаемую метку типа публикации
+  const publicationTypeLabel = getPublicationTypeLabel(doc.attributes);
+
   return (
     <article className={styles.publicationCard}>
-      {/* Первая строка: дата и ссылка на источник */}
       <div className={styles.header}>
         <span className={styles.date}>{dateStr}</span>
         <span className={styles.separator}>•</span>
@@ -69,10 +72,13 @@ export const PublicationCard = ({ doc }: PublicationCardProps) => {
         </a>
       </div>
 
-      {/* Название публикации */}
       <h3 className={styles.title}>{doc.title?.text ?? "Без заголовка"}</h3>
 
-      {/* Картинка (если есть) */}
+      {/* Бейдж типа публикации (если есть) */}
+      {publicationTypeLabel && (
+        <div className={styles.typeBadge}>{publicationTypeLabel}</div>
+      )}
+
       {imageUrl && (
         <div className={styles.imageWrapper}>
           <img
@@ -84,17 +90,14 @@ export const PublicationCard = ({ doc }: PublicationCardProps) => {
         </div>
       )}
 
-      {/* Основная часть публикации (до 150 символов, остальное скрыто) */}
       <p className={styles.preview}>
         {previewText}
         {cleanText.length > 150 ? "…" : ""}
       </p>
 
       <div className={styles.footer}>
-        {/* Количество слов */}
         <span className={styles.meta}>{wordCount} слов</span>
 
-        {/* Кнопка «Читать в источнике» */}
         <a
           href={sourceUrl}
           target="_blank"

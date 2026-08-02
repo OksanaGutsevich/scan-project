@@ -99,3 +99,14 @@
 .readMoreButton:active {
   transform: translateY(0);
 }
+
+.typeBadge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: inline-block;
+  margin-bottom: 8px;
+  align-self: flex-start;
+  text-transform: capitalize;
+}
