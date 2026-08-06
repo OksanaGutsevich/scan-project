@@ -346,7 +346,6 @@ export function AuthPage() {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

@@ -226,9 +226,6 @@ export function HomePage() {
           </div>
         </section>
       </main>
-
-      {/* Футер */}
-      <Footer />
     </div>
   );
 }

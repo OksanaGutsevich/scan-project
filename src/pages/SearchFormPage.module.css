@@ -1,114 +1,186 @@
+.containerMain {
+  margin-left: 53px;
+  margin-top: 45px;
+}
+
 .container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px;
-  font-family: Arial, sans-serif;
+  width: 100%;
+  padding: 0;
+  box-sizing: border-box;
+  display: flex;
+  margin-bottom: 64px;
+}
+
+.form {
+  margin-top: 33px;
+  display: block;
+  font-size: 18px;
+  width: 872px;
+}
+
+.textImagesWrapper {
+  display: flex;
+}
+
+.imagesWrapper {
+  margin-left: 250px;
+  padding-top: 50px;
+}
+
+.docsImage {
+  margin-left: 150px;
 }
 
 .title {
   margin-bottom: 1.5rem;
-  font-size: 24px;
+  font-size: 40px;
   font-weight: 600;
   color: #333;
+  font-weight: 800;
+  font-family: "FerryBlack", sans-serif;
+}
+
+.text {
+  font-size: 20px;
 }
 
 .errorBlock {
   color: #d32f2f;
-  background-color: #ffebee;
-  border: 1px solid #ffcdd2;
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 24px;
+  font-size: 14px;
+  padding-left: 40px;
 }
 
-.gridForm {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
+.inputError {
+  border-color: #ff5959 !important;
+  box-shadow: 0 0 12px 4px rgba(255, 89, 89, 0.2) !important;
 }
 
 .formField {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .label {
   display: block;
-  margin-bottom: 6px;
-  font-weight: 600;
-  font-size: 14px;
-  color: #333;
+  margin-top: 21px;
+  text-wrap: nowrap;
+  margin-bottom: 15px;
+}
+
+.selectLabel {
+  margin-top: 21px;
+  display: flex;
+  flex-direction: column;
+  justify-content: left;
+}
+
+.input,
+.inputDate {
+  width: 100%;
+  height: 43px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  text-align: center;
+  box-shadow: 0 0 12px 4px rgba(85, 85, 85, 0.15);
 }
 
 .input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-  box-sizing: border-box;
+  width: 242px;
 }
 
-.hint {
-  color: #888;
-  display: block;
-  margin-top: 4px;
-  font-size: 12px;
+.inputDate {
+  width: 176px;
+}
+
+.input:focus,
+.inputDate:focus,
+.select:focus {
+  outline: none; /* убирает жёлтую рамку */
+  background-color: rgba(89, 112, 255, 0.05);
 }
 
 .filtersBlock {
-  background: #f5f5f5;
-  padding: 16px;
   border-radius: 8px;
-  margin-top: 24px;
-}
-
-.filtersTitle {
-  margin: 0 0 12px 0;
-  font-size: 16px;
-  color: #333;
+  margin-left: 55px;
+  margin-right: 39px;
+  margin-top: 5px;
+  text-wrap: nowrap;
 }
 
 .filtersRow {
-  display: flex;
-  gap: 20px;
+  display: block;
   flex-wrap: wrap;
   align-items: flex-end;
 }
 
-.checkboxLabel {
-  font-weight: 600;
+.customCheckboxLabel,
+.checkboxLabelDisable {
   display: flex;
   align-items: center;
-  gap: 6px;
   cursor: pointer;
-  margin-right: 16px;
+  gap: 17px;
+  padding-top: 16px;
 }
 
 .checkbox {
-  margin-right: 4px;
   accent-color: #007bff;
 }
 
-.selectLabel {
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.select {
+  border-radius: 4px;
+  border: none;
+  margin-top: 20px;
+  padding: 13px 40px 13px 22px;
+  width: 100%; /* растягиваем внутри wrapper */
+  box-shadow: 0 0 12px 4px rgba(85, 85, 85, 0.15);
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #fff;
+  cursor: pointer;
 }
 
-.select {
-  padding: 6px 8px;
-  border-radius: 4px;
-  margin-left: 6px;
+.selectWrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  max-width: 242px; /* фиксируем ширину здесь */
+}
+
+/* Кастомная стрелка — исправлено */
+.selectWrapper::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  top: 70%;
+  transform: translateY(-50%);
+  width: 0; /* обязательно */
+  height: 0; /* обязательно */
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid #999; /* серый треугольник вниз */
+  pointer-events: none;
+}
+
+/* Фокус (чтобы сохранить доступность) */
+.select:focus {
+  background-color: rgba(89, 112, 255, 0.05);
+  outline: none;
+}
+
+.btnBlock {
+  display: flex;
+  flex-direction: column;
 }
 
 .btn {
-  margin-top: 24px;
-  padding: 14px 28px;
+  margin-right: 39px;
+  margin-top: 70px;
+  height: 59px;
   font-size: 16px;
-  background-color: #007bff;
+  background-color: #5970ff;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -129,12 +201,9 @@
 }
 
 .totalCountBlock {
-  margin-top: 16px;
-  padding: 12px;
   background-color: #e3f2fd;
   border: 1px solid #90caf9;
   border-radius: 8px;
-  font-weight: 600;
   font-size: 15px;
   color: #0277bd;
 }
@@ -144,54 +213,116 @@
   color: #01579b;
 }
 
-.previewBlock {
-  margin-top: 32px;
-  padding: 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background-color: #fafafa;
-}
-
-.previewTitle {
-  margin: 0 0 12px 0;
-  font-size: 18px;
-  color: #2c3e50;
-}
-
-.previewItem {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.previewSubtitle {
-  margin: 0;
-  font-size: 14px;
-  color: #555;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.previewData {
-  background: #fff;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 12px;
-  color: #333;
-  max-height: 200px;
-  overflow-y: auto;
-  margin: 0;
-  white-space: pre-wrap;
-}
-
 .emptyMessage {
   color: #777;
   font-style: italic;
 }
 
 .note {
-  margin-top: 16px;
   font-size: 13px;
   color: #777;
+}
+
+.formFirst {
+  box-shadow: 0 0 12px 4px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  height: 543px;
+}
+
+.wrapper {
+  display: flex;
+}
+
+.wrapperInnTonQuality {
+  flex: 1;
+  margin-left: 44px;
+  justify-content: left;
+}
+
+.wrapperDate {
+  display: flex;
+}
+
+.important {
+  font-size: 14px;
+  margin-right: 85px;
+  margin-top: 5px;
+}
+
+h3 {
+  font-size: 14px;
+  margin-left: 44px;
+  margin-bottom: 0;
+  margin-top: 30px;
+  font-weight: 400;
+}
+
+.wrapperDate {
+  justify-content: space-between;
+  margin: 0;
+}
+
+.formFieldcontainer {
+  margin-left: 44px;
+  display: flex;
+  justify-content: left;
+  width: 372px;
+  gap: 20px;
+}
+
+.mainImage {
+  margin-left: 80px;
+}
+
+/* Скрываем нативный input, но оставляем его в DOM для доступности и работы формы */
+.nativeCheckbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Контейнер: выравнивает иконку и текст в строку, делает всю область кликабельной */
+.customCheckboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  min-height: 24px; /* чтобы не «прыгало» при рендере */
+}
+
+/* Сам квадратик (визуальный чекбокс) */
+.checkmark {
+  position: relative;
+  display: block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ccc;
+  background-color: #fff; /* белый фон по умолчанию */
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+  flex-shrink: 0; /* не сжимается в flex-контейнере */
+}
+
+/* Состояние checked: зелёный фон */
+.nativeCheckbox:checked + .checkmark {
+  background-color: #fff; /* зелёный фон (Bootstrap-стиль, можно заменить) */
+  border-color: #000;
+  border: 1px solid;
+}
+
+/* Белая галочка через псевдоэлемент */
+.nativeCheckbox:checked + .checkmark::after {
+  content: "";
+  position: absolute;
+  /* центрируем галочку внутри квадрата */
+  left: 5px;
+  top: 1px;
+  width: 5px;
+  height: 10px;
+  border: solid #44b34d;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }

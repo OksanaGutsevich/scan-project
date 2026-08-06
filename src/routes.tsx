@@ -4,7 +4,6 @@ import HomePage from "./pages/HomePage";
 import { AuthPage } from "./pages/AuthPage";
 import SearchFormPage from "./pages/SearchFormPage";
 import ResultsPage from "./pages/ResultsPage";
-import PublicationDetailPage from "./pages/PublicationDetailPage"; // <-- подключаем страницу
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 export const AppRoutes = () => (
@@ -26,16 +25,6 @@ export const AppRoutes = () => (
       element={
         <ProtectedRoute>
           <ResultsPage />
-        </ProtectedRoute>
-      }
-    />
-
-    {/* Страница детальной публикации — тоже под защитой, как и результаты */}
-    <Route
-      path="/publication/:id"
-      element={
-        <ProtectedRoute>
-          <PublicationDetailPage />
         </ProtectedRoute>
       }
     />

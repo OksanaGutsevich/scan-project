@@ -11,11 +11,18 @@ const stripXmlTags = (markup: string): string => {
 };
 
 function extractImageUrl(markup: string): string | null {
-  const imgMatch = markup.match(/&lt;img[^&]*src=["']([^"']+)["']/i);
-  if (imgMatch) return imgMatch[1];
+  if (!markup) return null;
 
-  const fallbackMatch = markup.match(/<img[^>]+src=["']([^"']+)["']/i);
-  return fallbackMatch ? fallbackMatch[1] : null;
+  const tempDiv = document.createElement("div");
+  tempDiv.innerHTML = markup;
+  const decoded = tempDiv.textContent ?? "";
+
+  // Если после декодирования остались теги — парсим как HTML
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(decoded, "text/html");
+  const img = doc.querySelector("img");
+
+  return img?.getAttribute("src") ?? null;
 }
 
 interface PublicationCardProps {
