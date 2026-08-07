@@ -1,0 +1,126 @@
+.resultsPage {
+  padding: 20px;
+}
+
+.loadingBlock {
+  padding: 24px;
+  text-align: center;
+}
+
+.errorBlock {
+  padding: 24px;
+  color: #b00020;
+}
+
+.errorBlock pre {
+  background: #f5f5f5;
+  padding: 16px;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.backLink {
+  color: #1976d2;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+/* Стили для HistogramBlock */
+.histogramSection {
+  margin-bottom: 32px;
+}
+
+.histogramTitle {
+  margin: 0 0 16px 0;
+}
+
+.histogramTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+.histogramTable thead {
+  background: #f5f5f5;
+}
+
+.histogramTable th,
+.histogramTable td {
+  padding: 12px;
+  border: 1px solid #ddd;
+}
+
+.histogramTable th {
+  text-align: left;
+}
+
+.histogramTable tbody tr {
+  border-bottom: 1px solid #eee;
+}
+
+.histogramTable td.totalColumn,
+.histogramTable td.risksColumn {
+  text-align: right;
+}
+
+.histogramTable td.risksColumn {
+  color: #d32f2f;
+}
+
+.histogramTotals {
+  display: flex;
+  gap: 24px;
+  color: #555;
+  font-size: 14px;
+}
+
+.histogramTotals strong {
+  font-weight: 700;
+}
+
+.histogramTotals .totalValue {
+  color: #000;
+}
+
+.histogramTotals .risksValue {
+  color: #d32f2f;
+}
+
+/* Стили для PublicationsBlock */
+.publicationsSection {
+  margin-top: 24px; /* если нужно, можно убрать */
+}
+
+.publicationsTitle {
+  margin: 0 0 8px 0;
+}
+
+.publicationsInfo {
+  margin: 0 0 12px 0;
+  color: #555;
+}
+
+.noPublications {
+  padding: 12px;
+  color: #888;
+}
+
+.showMoreButton {
+  margin-top: 24px;
+  padding: 10px 20px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  color: #333;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.showMoreButton:hover {
+  border-color: #999;
+}
+
+.totalValue {
+  margin-right: 4px;
+}

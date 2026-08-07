@@ -116,7 +116,7 @@ export interface SearchPayload {
   sortDirectionType: SortDirectionOption; // исправлено
 }
 
-// 🔥 Типы строго под твой ответ API
+// Типы
 export interface HistogramPoint {
   date: string; // "2020-11-01T03:00:00+03:00"
   value: number; // 8, 6, 0, 1

@@ -81,7 +81,7 @@ export function SearchFormPage() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
-  const [onlyMainRole, setOnlyMainRole] = useState(true);
+  const [onlyMainRole, setOnlyMainRole] = useState(false);
   const [onlyWithRiskFactors, setOnlyWithRiskFactors] = useState(false);
   const [tonality, setTonality] = useState<TonalityOption>("any");
   const [limit, setLimit] = useState<string>("");

@@ -9,8 +9,11 @@ import type {
   SearchResponse,
   ScanDoc,
   HistogramResponse,
+  HistogramSeries,
 } from "../types";
 import { PublicationCard } from "../components/PublicationCard";
+import styles from "./ResultPage.module.css";
+import { Header } from "../components/Header/Header";
 
 // --- Вспомогательные функции (вне компонента) ---
 const formatStartDate = (dateStr?: string): string => {
@@ -79,7 +82,7 @@ const loadData = async ({
       issueDateInterval,
       searchContext,
       intervalType: "month" as const,
-      histogramTypes: ["totalDocuments"] as const,
+      histogramTypes: ["totalDocuments", "riskFactors"] as const,
       similarMode: "None",
       limit: 12,
       sortType: "issueDate",
@@ -161,32 +164,80 @@ const loadDocumentsByIds = async (ids: string[]): Promise<ScanDoc[]> => {
 
 // --- Блок гистограммы ---
 function HistogramBlock({ data }: { data: HistogramResponse | null }) {
-  if (!data) return null;
+  if (!data || data.data.length === 0) return null;
 
-  const totalDocuments = data.data
-    .filter((s) => s.histogramType === "totalDocuments")
-    .flatMap((s) => s.data)
-    .reduce((sum, point) => sum + (point.value ?? 0), 0);
+  const totalSeries = data.data.find(
+    (s) => s.histogramType === "totalDocuments",
+  );
+  const riskSeries = data.data.find((s) => s.histogramType === "riskFactors");
+
+  if (!totalSeries && !riskSeries) return null;
+
+  const points = totalSeries?.data ?? riskSeries?.data;
+  if (!points || points.length === 0) return null;
+
+  const formatMonthYear = (iso: string): string => {
+    const d = new Date(iso);
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${month}.${year}`;
+  };
+
+  const getValueByDate = (
+    series: HistogramSeries | undefined,
+    dateIso: string,
+  ) => {
+    if (!series) return 0;
+    const point = series.data.find((p) => p.date === dateIso);
+    return point ? (point.value ?? 0) : 0;
+  };
+
+  const totalSum = totalSeries
+    ? totalSeries.data.reduce((sum, p) => sum + (p.value ?? 0), 0)
+    : 0;
 
   return (
-    <section style={{ marginBottom: "32px" }}>
-      <h3>Гистограмма (статистика по месяцам)</h3>
-      <p>
-        Всего документов за выбранный период:{" "}
-        <strong>{totalDocuments.toLocaleString()}</strong>
-      </p>
-      <pre
-        style={{
-          background: "#f5f5f5",
-          padding: "16px",
-          borderRadius: "8px",
-          maxHeight: "400px",
-          overflowY: "auto",
-          whiteSpace: "pre-wrap",
-        }}
-      >
-        {JSON.stringify(data, null, 2)}
-      </pre>
+    <section className={styles.histogramSection}>
+      <h3 className={styles.histogramTitle}>Общая сводка</h3>
+
+      <div className={styles.histogramTotals}>
+        <span>
+          Найдено{" "}
+          <strong className={styles.totalValue}>
+            {totalSum.toLocaleString()}
+          </strong>
+          вариантов
+        </span>
+      </div>
+
+      <table className={styles.histogramTable}>
+        <thead>
+          <tr>
+            <th>Период</th>
+            <th className={styles.totalColumn}>Всего</th>
+            <th className={styles.risksColumn}>Риски</th>
+          </tr>
+        </thead>
+        <tbody>
+          {points.map((point) => {
+            const total = getValueByDate(totalSeries, point.date);
+            const risks = getValueByDate(riskSeries, point.date);
+
+            return (
+              <tr key={point.date}>
+                <td>{formatMonthYear(point.date)}</td>
+                <td className={styles.totalColumn}>{total.toLocaleString()}</td>
+                <td
+                  className={styles.risksColumn}
+                  style={{ color: risks > 0 ? "#d32f2f" : "inherit" }}
+                >
+                  {risks.toLocaleString()}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </section>
   );
 }
@@ -206,18 +257,11 @@ function PublicationsBlock({
   const hasMore = documents.length < searchResult.items.length;
 
   return (
-    <section>
-      <h3>Список публикаций</h3>
-      <div style={{ marginBottom: "12px", color: "#555" }}>
-        Найдено публикаций:{" "}
-        <strong>{searchResult.items.length.toLocaleString()}</strong>.
-        Загружено: <strong>{documents.length}</strong>.
-      </div>
+    <section className={styles.publicationsSection}>
+      <h3 className={styles.publicationsTitle}>Список документов</h3>
 
       {documents.length === 0 ? (
-        <p style={{ padding: "12px", color: "#888" }}>
-          Нет загруженных публикаций
-        </p>
+        <p className={styles.noPublications}>Нет загруженных публикаций</p>
       ) : (
         <>
           {documents.map((doc) => (
@@ -227,15 +271,7 @@ function PublicationsBlock({
           {hasMore && (
             <button
               onClick={() => onShowMore()}
-              style={{
-                marginTop: "24px",
-                padding: "10px 20px",
-                backgroundColor: "#fff",
-                border: "1px solid #ccc",
-                color: "#333",
-                cursor: "pointer",
-                fontSize: "14px",
-              }}
+              className={styles.showMoreButton}
             >
               Показать больше
             </button>
@@ -439,8 +475,6 @@ export function ResultsPage() {
         dispatch({ type: "loadError", payload: msg });
       });
 
-    // cleanup: nothing to abort here because we ignore stale responses by id
-    // but we log when effect is cleaned up (debug)
     return () => {
       console.debug("ResultsPage effect cleanup", {
         requestId,
@@ -448,7 +482,7 @@ export function ResultsPage() {
       });
     };
   }, [
-    hasInn, // <-- ДОБАВЛЕНО: теперь правило не ругается
+    hasInn,
     inn,
     fromDate,
     toDate,
@@ -476,39 +510,42 @@ export function ResultsPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: "24px", textAlign: "center" }}>
-        <p>Загрузка данных…</p>
+      <div className={styles.resultsPage}>
+        <Header />
+        <div className={styles.loadingBlock}>
+          <p>Загрузка данных…</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{ padding: "24px", color: "#b00020" }}>
-        <h3>Ошибка</h3>
-        <pre
-          style={{
-            background: "#f5f5f5",
-            padding: "16px",
-            borderRadius: "8px",
-            whiteSpace: "pre-wrap",
-            maxHeight: "300px",
-            overflowY: "auto",
-          }}
-        >
-          {error}
-        </pre>
-        <br />
-        <a href="/search" style={{ color: "#1976d2", fontSize: "14px" }}>
-          ← Вернуться к поиску
-        </a>
+      <div className={styles.resultsPage}>
+        <Header />
+        <div className={styles.errorBlock}>
+          <h3>Ошибка</h3>
+          <pre>{error}</pre>
+          <br />
+          <a href="/search" className={styles.backLink}>
+            ← Вернуться к поиску
+          </a>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="results-page" style={{ padding: "20px" }}>
-      <h1>Результаты поиска по ИНН: {inn}</h1>
+    <div className={styles.resultsPage}>
+      <Header />
+
+      <h1>
+        Ищем. Скоро <br /> будут результаты
+      </h1>
+
+      <span>
+        Поиск может занять некоторое время, <br /> просим сохранять терпение
+      </span>
 
       <HistogramBlock data={histogramData} />
 
@@ -519,7 +556,7 @@ export function ResultsPage() {
       />
 
       <br />
-      <a href="/search" style={{ color: "#1976d2", fontSize: "14px" }}>
+      <a href="/search" className={styles.backLink}>
         ← Вернуться к поиску
       </a>
     </div>
