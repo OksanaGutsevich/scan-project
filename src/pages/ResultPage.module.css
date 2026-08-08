@@ -2,11 +2,6 @@
   padding: 20px;
 }
 
-.loadingBlock {
-  padding: 24px;
-  text-align: center;
-}
-
 .errorBlock {
   padding: 24px;
   color: #b00020;
@@ -51,6 +46,8 @@
   display: flex;
   justify-content: center; /* центрирует по горизонтали */
   margin-top: 20px;
+  max-width: 1440px;
+  width: 100%;
 }
 
 .showMoreButton {
@@ -63,6 +60,10 @@
   font-size: 22px;
   border: transparent;
   cursor: pointer;
+}
+
+.showMoreButton {
+  transform: translateY(-1px) scale(1.01);
 }
 
 .histogramTotals {
@@ -85,6 +86,7 @@
   border-radius: 10px;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
+  position: relative; /* ← обязательно */
 }
 
 /* Стили для скроллбара (опционально) */
@@ -228,4 +230,26 @@
   margin-top: 16px;
   max-width: 1320px;
   width: 100%;
+}
+
+.loaderTextWrapper {
+  display: block;
+}
+
+.loadingBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* центрирование по горизонтали */
+  justify-content: center; /* центрирование по вертикали */
+  padding: 24px;
+  text-align: center;
+  min-height: 60vh;
+}
+
+/* У текста не должно быть своих отступов */
+.loadingText {
+  max-width: 200px;
+  max-height: 200px;
+  margin-top: 70px;
+  padding-top: 60px;
 }

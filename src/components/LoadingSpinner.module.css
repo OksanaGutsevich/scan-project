@@ -5,6 +5,10 @@
   background-color: #d9d9d9;
 }
 
+/* отдельный класс для прозрачного режима */
+.spinnerRingTransparent {
+  background-color: transparent !important;
+}
 .dot {
   position: absolute;
   top: 50%;

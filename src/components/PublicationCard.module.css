@@ -102,8 +102,9 @@
 }
 
 .readMoreButton:hover {
-  background-color: #0056b3;
+  background-color: #029491;
   transform: translateY(-1px);
+  opacity: 0.7;
 }
 
 .readMoreButton:active {

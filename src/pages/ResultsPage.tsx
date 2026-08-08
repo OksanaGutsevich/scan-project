@@ -17,6 +17,7 @@ import { Header } from "../components/Header/Header";
 import arrowleftImage from "../assets/icons/arrowleft.png";
 import arrowrightImage from "../assets/icons/arrowright.png";
 import resultPageImage from "../assets/icons/resultpageimage.png";
+import { LoadingSpinner } from "../components/LoadingSpinner";
 
 // --- Вспомогательные функции (вне компонента) ---
 const formatStartDate = (dateStr?: string): string => {
@@ -598,7 +599,10 @@ export function ResultsPage() {
       <div className={styles.resultsPage}>
         <Header />
         <div className={styles.loadingBlock}>
-          <p>Загружаем данные</p>
+          <div className={styles.loaderTextWrapper}>
+            <LoadingSpinner transparent />
+          </div>
+          <p className={styles.loadingText}>Загружаем данные...</p>
         </div>
       </div>
     );

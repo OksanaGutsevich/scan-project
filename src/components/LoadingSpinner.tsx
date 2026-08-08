@@ -1,9 +1,20 @@
+// src/components/LoadingSpinner.tsx
 import type { ReactElement } from "react";
 import styles from "./LoadingSpinner.module.css";
 
-export function LoadingSpinner(): ReactElement {
+interface LoadingSpinnerProps {
+  transparent?: boolean;
+}
+
+export function LoadingSpinner({
+  transparent,
+}: LoadingSpinnerProps = {}): ReactElement {
   return (
-    <div className={styles.spinnerRing}>
+    <div
+      className={
+        transparent ? styles.spinnerRingTransparent : styles.spinnerRing
+      }
+    >
       {[...Array(8)].map((_, i) => (
         <div
           key={i}
