@@ -84,7 +84,7 @@ const loadData = async ({
       intervalType: "month" as const,
       histogramTypes: ["totalDocuments", "riskFactors"] as const,
       similarMode: "None",
-      limit: 12,
+      limit: 36,
       sortType: "issueDate",
       sortDirectionType: "asc",
       attributeFilters: {
@@ -173,7 +173,7 @@ function HistogramBlock({ data }: { data: HistogramResponse | null }) {
 
   if (!totalSeries && !riskSeries) return null;
 
-  const points = totalSeries?.data ?? riskSeries?.data;
+  const points = (totalSeries?.data ?? riskSeries?.data)?.slice(-12);
   if (!points || points.length === 0) return null;
 
   const formatMonthYear = (iso: string): string => {
@@ -210,34 +210,47 @@ function HistogramBlock({ data }: { data: HistogramResponse | null }) {
         </span>
       </div>
 
-      <table className={styles.histogramTable}>
-        <thead>
-          <tr>
-            <th>Период</th>
-            <th className={styles.totalColumn}>Всего</th>
-            <th className={styles.risksColumn}>Риски</th>
-          </tr>
-        </thead>
-        <tbody>
+      {/* Контейнер для горизонтальной прокрутки */}
+      <div className={styles.histogramWrapper}>
+        {/* Шапка (месяцы) */}
+        <div className={styles.histogramHeaderRow}>
+          <div className={styles.fixedCell}>Период</div>
+          {points.map((point) => (
+            <div key={point.date} className={styles.monthCell}>
+              {formatMonthYear(point.date)}
+            </div>
+          ))}
+        </div>
+
+        {/* Строка "Всего" */}
+        <div className={styles.histogramDataRow}>
+          <div className={styles.fixedCell}>Всего</div>
           {points.map((point) => {
             const total = getValueByDate(totalSeries, point.date);
-            const risks = getValueByDate(riskSeries, point.date);
-
             return (
-              <tr key={point.date}>
-                <td>{formatMonthYear(point.date)}</td>
-                <td className={styles.totalColumn}>{total.toLocaleString()}</td>
-                <td
-                  className={styles.risksColumn}
-                  style={{ color: risks > 0 ? "#d32f2f" : "inherit" }}
-                >
-                  {risks.toLocaleString()}
-                </td>
-              </tr>
+              <div key={point.date} className={styles.dataCell}>
+                {total.toLocaleString()}
+              </div>
             );
           })}
-        </tbody>
-      </table>
+        </div>
+
+        {/* Строка "Риски" */}
+        {/* Строка "Риски" */}
+        <div
+          className={`${styles.histogramDataRow} ${styles.histogramRowRisks}`}
+        >
+          <div className={styles.fixedCell}>Риски</div>
+          {points.map((point) => {
+            const risks = getValueByDate(riskSeries, point.date);
+            return (
+              <div key={point.date} className={styles.dataCell}>
+                {risks.toLocaleString()}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </section>
   );
 }

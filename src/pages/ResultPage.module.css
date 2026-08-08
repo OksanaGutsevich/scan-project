@@ -27,67 +27,6 @@
   text-decoration: none;
 }
 
-/* Стили для HistogramBlock */
-.histogramSection {
-  margin-bottom: 32px;
-}
-
-.histogramTitle {
-  margin: 0 0 16px 0;
-}
-
-.histogramTable {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 16px;
-}
-
-.histogramTable thead {
-  background: #f5f5f5;
-}
-
-.histogramTable th,
-.histogramTable td {
-  padding: 12px;
-  border: 1px solid #ddd;
-}
-
-.histogramTable th {
-  text-align: left;
-}
-
-.histogramTable tbody tr {
-  border-bottom: 1px solid #eee;
-}
-
-.histogramTable td.totalColumn,
-.histogramTable td.risksColumn {
-  text-align: right;
-}
-
-.histogramTable td.risksColumn {
-  color: #d32f2f;
-}
-
-.histogramTotals {
-  display: flex;
-  gap: 24px;
-  color: #555;
-  font-size: 14px;
-}
-
-.histogramTotals strong {
-  font-weight: 700;
-}
-
-.histogramTotals .totalValue {
-  color: #000;
-}
-
-.histogramTotals .risksValue {
-  color: #d32f2f;
-}
-
 /* Стили для PublicationsBlock */
 .publicationsSection {
   margin-top: 24px; /* если нужно, можно убрать */
@@ -123,4 +62,92 @@
 
 .totalValue {
   margin-right: 4px;
+}
+
+/*Гистограмма*/
+/* Обертка с рамкой, скруглением и скроллом */
+.histogramWrapper {
+  overflow-x: auto;
+  white-space: nowrap;
+  width: 1260px;
+  border: 1px solid #029491;
+  border-radius: 10px;
+}
+
+/* Стили для скроллбара (опционально) */
+.histogramWrapper::-webkit-scrollbar {
+  height: 6px;
+}
+.histogramWrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+.histogramWrapper::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+.histogramWrapper::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* Строки (шапка и данные) */
+.histogramHeaderRow,
+.histogramDataRow {
+  display: flex;
+  min-width: max-content; /* чтобы строка не сжималась */
+}
+
+/* Фиксированный левый столбец (Период, Всего, Риски) */
+.fixedCell {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background-color: #029491;
+  color: #f5f5f5;
+  font-weight: 300;
+  width: 133px;
+  flex-shrink: 0; /* запрещает сжиматься */
+  padding: 17px 27px 13px 28px;
+  text-align: center;
+  vertical-align: bottom;
+  box-sizing: border-box;
+}
+
+.monthCell,
+.dataCell {
+  width: 131px;
+  flex-shrink: 0;
+  padding-top: 17px;
+  text-align: center;
+  box-sizing: border-box;
+  position: relative; /* важно для позиционирования линии */
+}
+
+/* Рисуем короткую вертикальную линию справа */
+.monthCell::after {
+  content: "";
+  position: absolute;
+  top: 10px; /* отступ сверху */
+  bottom: 0px; /* отступ снизу */
+  right: 0;
+  width: 2px; /* толщина линии */
+  background-color: #949494;
+  opacity: 0.4;
+}
+
+/* Базовая линия: от верха до низа */
+.dataCell::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #949494;
+  opacity: 0.4;
+}
+
+/* Для строки "Риски": линия не доходит до низа на 16px */
+.histogramRowRisks .dataCell::after {
+  bottom: 10px;
 }
