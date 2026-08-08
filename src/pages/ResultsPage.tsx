@@ -1,5 +1,5 @@
 // src/pages/ResultsPage.tsx
-import { useEffect, useReducer, useRef } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom"; // если понадобится, но мы уже импортировали выше
 import apiClient from "../api/client";
 import axios from "axios";
@@ -14,6 +14,9 @@ import type {
 import { PublicationCard } from "../components/PublicationCard";
 import styles from "./ResultPage.module.css";
 import { Header } from "../components/Header/Header";
+import arrowleftImage from "../assets/icons/arrowleft.png";
+import arrowrightImage from "../assets/icons/arrowright.png";
+import resultPageImage from "../assets/icons/resultpageimage.png";
 
 // --- Вспомогательные функции (вне компонента) ---
 const formatStartDate = (dateStr?: string): string => {
@@ -162,8 +165,13 @@ const loadDocumentsByIds = async (ids: string[]): Promise<ScanDoc[]> => {
     .filter((doc): doc is ScanDoc => doc !== null);
 };
 
-// --- Блок гистограммы ---
+// --- Блок гистограммы (в стиле карусели) ---
 function HistogramBlock({ data }: { data: HistogramResponse | null }) {
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
   if (!data || data.data.length === 0) return null;
 
   const totalSeries = data.data.find(
@@ -173,6 +181,7 @@ function HistogramBlock({ data }: { data: HistogramResponse | null }) {
 
   if (!totalSeries && !riskSeries) return null;
 
+  // Показываем только последние 12 месяцев
   const points = (totalSeries?.data ?? riskSeries?.data)?.slice(-12);
   if (!points || points.length === 0) return null;
 
@@ -196,6 +205,38 @@ function HistogramBlock({ data }: { data: HistogramResponse | null }) {
     ? totalSeries.data.reduce((sum, p) => sum + (p.value ?? 0), 0)
     : 0;
 
+  const scrollBy = (amount: number) => {
+    if (wrapperRef.current) {
+      wrapperRef.current.scrollBy({ left: amount, behavior: "smooth" });
+    }
+  };
+
+  const prev = () => scrollBy(-200);
+  const next = () => scrollBy(200);
+
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+
+    const checkScroll = () => {
+      setCanScrollLeft(el.scrollLeft > 0);
+      setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth);
+    };
+
+    // Слушаем скролл
+    el.addEventListener("scroll", checkScroll);
+    // Слушаем изменение размеров
+    window.addEventListener("resize", checkScroll);
+
+    // Проверка сразу после монтирования
+    checkScroll();
+
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, []);
+
   return (
     <section className={styles.histogramSection}>
       <h3 className={styles.histogramTitle}>Общая сводка</h3>
@@ -210,45 +251,71 @@ function HistogramBlock({ data }: { data: HistogramResponse | null }) {
         </span>
       </div>
 
-      {/* Контейнер для горизонтальной прокрутки */}
-      <div className={styles.histogramWrapper}>
-        {/* Шапка (месяцы) */}
-        <div className={styles.histogramHeaderRow}>
-          <div className={styles.fixedCell}>Период</div>
-          {points.map((point) => (
-            <div key={point.date} className={styles.monthCell}>
-              {formatMonthYear(point.date)}
+      {/* Обёртка как в карусели: overflow + position:relative для кнопок */}
+      <div className={styles.histogramControls}>
+        <div className={styles.wrapper}>
+          {/* Кнопка «Назад» */}
+          <button
+            type="button"
+            onClick={prev}
+            className={`${styles.navButton} ${styles.prev}`}
+            aria-label="Прокрутить влево"
+            disabled={!canScrollLeft}
+          >
+            <img src={arrowleftImage} alt="" className={styles.arrowImg} />
+          </button>
+
+          {/* Прокручиваемый контейнер */}
+          <div ref={wrapperRef} className={styles.histogramWrapper}>
+            {/* Шапка (месяцы) */}
+            <div className={styles.histogramHeaderRow}>
+              <div className={styles.fixedCell}>Период</div>
+              {points.map((point) => (
+                <div key={point.date} className={styles.monthCell}>
+                  {formatMonthYear(point.date)}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Строка "Всего" */}
-        <div className={styles.histogramDataRow}>
-          <div className={styles.fixedCell}>Всего</div>
-          {points.map((point) => {
-            const total = getValueByDate(totalSeries, point.date);
-            return (
-              <div key={point.date} className={styles.dataCell}>
-                {total.toLocaleString()}
-              </div>
-            );
-          })}
-        </div>
+            {/* Строка "Всего" */}
+            <div className={styles.histogramDataRow}>
+              <div className={styles.fixedCell}>Всего</div>
+              {points.map((point) => {
+                const total = getValueByDate(totalSeries, point.date);
+                return (
+                  <div key={point.date} className={styles.dataCell}>
+                    {total.toLocaleString()}
+                  </div>
+                );
+              })}
+            </div>
 
-        {/* Строка "Риски" */}
-        {/* Строка "Риски" */}
-        <div
-          className={`${styles.histogramDataRow} ${styles.histogramRowRisks}`}
-        >
-          <div className={styles.fixedCell}>Риски</div>
-          {points.map((point) => {
-            const risks = getValueByDate(riskSeries, point.date);
-            return (
-              <div key={point.date} className={styles.dataCell}>
-                {risks.toLocaleString()}
-              </div>
-            );
-          })}
+            {/* Строка "Риски" */}
+            <div
+              className={`${styles.histogramDataRow} ${styles.histogramRowRisks}`}
+            >
+              <div className={styles.fixedCell}>Риски</div>
+              {points.map((point) => {
+                const risks = getValueByDate(riskSeries, point.date);
+                return (
+                  <div key={point.date} className={styles.dataCell}>
+                    {risks.toLocaleString()}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Кнопка «Вперёд» */}
+          <button
+            type="button"
+            onClick={next}
+            className={`${styles.navButton} ${styles.next}`}
+            aria-label="Прокрутить вправо"
+            disabled={!canScrollRight}
+          >
+            <img src={arrowrightImage} alt="" className={styles.arrowImg} />
+          </button>
         </div>
       </div>
     </section>
@@ -277,17 +344,22 @@ function PublicationsBlock({
         <p className={styles.noPublications}>Нет загруженных публикаций</p>
       ) : (
         <>
-          {documents.map((doc) => (
-            <PublicationCard key={doc.id} doc={doc} />
-          ))}
+          {/* Контейнер-сетка */}
+          <div className={styles.cardsGrid}>
+            {documents.map((doc) => (
+              <PublicationCard key={doc.id} doc={doc} />
+            ))}
+          </div>
 
           {hasMore && (
-            <button
-              onClick={() => onShowMore()}
-              className={styles.showMoreButton}
-            >
-              Показать больше
-            </button>
+            <div className={styles.showMoreContainer}>
+              <button
+                onClick={() => onShowMore()}
+                className={styles.showMoreButton}
+              >
+                Показать больше
+              </button>
+            </div>
           )}
         </>
       )}
@@ -526,7 +598,7 @@ export function ResultsPage() {
       <div className={styles.resultsPage}>
         <Header />
         <div className={styles.loadingBlock}>
-          <p>Загрузка данных…</p>
+          <p>Загружаем данные</p>
         </div>
       </div>
     );
@@ -551,14 +623,24 @@ export function ResultsPage() {
   return (
     <div className={styles.resultsPage}>
       <Header />
+      <div className={styles.resultPageTitleImage}>
+        <div>
+          <h1 className={styles.resultPageTitle}>
+            Ищем. Скоро <br /> будут результаты
+          </h1>
 
-      <h1>
-        Ищем. Скоро <br /> будут результаты
-      </h1>
+          <span>
+            Поиск может занять некоторое время, <br /> просим сохранять терпение
+          </span>
+        </div>
 
-      <span>
-        Поиск может занять некоторое время, <br /> просим сохранять терпение
-      </span>
+        <img
+          src={resultPageImage}
+          alt="Картинка сервиса по поиску ИНН"
+          className={styles.resultPageImage}
+          aria-hidden="true"
+        />
+      </div>
 
       <HistogramBlock data={histogramData} />
 

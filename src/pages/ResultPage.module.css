@@ -22,18 +22,19 @@
 }
 
 .backLink {
-  color: #1976d2;
-  font-size: 14px;
+  color: #5970ff;
+  font-size: 18px;
   text-decoration: none;
+  cursor: pointer;
 }
 
 /* Стили для PublicationsBlock */
 .publicationsSection {
-  margin-top: 24px; /* если нужно, можно убрать */
+  margin: 0 auto;
 }
 
 .publicationsTitle {
-  margin: 0 0 8px 0;
+  margin-bottom: 40px;
 }
 
 .publicationsInfo {
@@ -46,22 +47,32 @@
   color: #888;
 }
 
-.showMoreButton {
-  margin-top: 24px;
-  padding: 10px 20px;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  color: #333;
-  cursor: pointer;
-  font-size: 14px;
+.showMoreContainer {
+  display: flex;
+  justify-content: center; /* центрирует по горизонтали */
+  margin-top: 20px;
 }
 
-.showMoreButton:hover {
-  border-color: #999;
+.showMoreButton {
+  margin-top: 24px;
+  padding: 16px 53px;
+  background-color: #5970ff;
+  border-radius: 5px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 22px;
+  border: transparent;
+  cursor: pointer;
+}
+
+.histogramTotals {
+  color: #949494;
+  padding: 17px 0 28px 0;
 }
 
 .totalValue {
   margin-right: 4px;
+  font-weight: 400;
 }
 
 /*Гистограмма*/
@@ -69,14 +80,16 @@
 .histogramWrapper {
   overflow-x: auto;
   white-space: nowrap;
-  width: 1260px;
+  width: 100%;
   border: 1px solid #029491;
   border-radius: 10px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
 
 /* Стили для скроллбара (опционально) */
 .histogramWrapper::-webkit-scrollbar {
-  height: 6px;
+  display: none; /* Chrome/Safari/Opera */
 }
 .histogramWrapper::-webkit-scrollbar-track {
   background: #f1f1f1;
@@ -150,4 +163,69 @@
 /* Для строки "Риски": линия не доходит до низа на 16px */
 .histogramRowRisks .dataCell::after {
   bottom: 10px;
+}
+
+/* Контейнер для всей панели с гистограммой и кнопками */
+.histogramControls {
+  display: flex;
+  align-items: center; /* вертикальное центрирование кнопок и таблицы */
+  justify-content: center; /* центрируем всю конструкцию */
+  width: 100%; /* растянем на всю ширину родителя */
+  max-width: 1400px; /* ограничение по ширине, если нужно */
+}
+
+/* Обёртка, которая содержит и кнопки, и скролл-контейнер */
+.wrapper {
+  position: relative; /* чтобы кнопки позиционировались внутри неё */
+  display: flex; /* кнопки + скролл-блок в ряд */
+  align-items: center;
+  width: 100%;
+  max-width: 1320px;
+  min-width: 0; /* важно: позволяет внутреннему скролл-блоку сжиматься */
+}
+
+/* Кнопки-стрелки */
+.navButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+.resultPageTitleImage {
+  display: flex;
+}
+
+.resultPageImage {
+  margin-left: 215px;
+  max-width: 351px;
+  height: auto;
+}
+
+.resultPageTitle,
+.publicationsTitle,
+.histogramTitle {
+  text-transform: uppercase;
+  font-family: "FerryBlack", sans-serif;
+}
+
+.histogramTitle,
+.publicationsTitle {
+  font-size: 30px;
+  margin-left: 0;
+}
+
+.resultPageTitle {
+  font-size: 40px;
+}
+
+.cardsGrid {
+  display: grid;
+  /* 2 колонки одинаковой ширины */
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px; /* расстояние между карточками */
+  margin-top: 16px;
+  max-width: 1320px;
+  width: 100%;
 }

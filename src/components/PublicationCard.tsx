@@ -54,7 +54,7 @@ export const PublicationCard = ({ doc }: PublicationCardProps) => {
 
   const rawText = doc.content?.markup ?? "";
   const cleanText = stripXmlTags(rawText);
-  const previewText = cleanText.substring(0, 150);
+  const previewText = cleanText.substring(0, 300);
 
   const wordCount =
     typeof doc.attributes?.wordCount === "number"
@@ -103,8 +103,6 @@ export const PublicationCard = ({ doc }: PublicationCardProps) => {
       </p>
 
       <div className={styles.footer}>
-        <span className={styles.meta}>{wordCount} слов</span>
-
         <a
           href={sourceUrl}
           target="_blank"
@@ -113,6 +111,8 @@ export const PublicationCard = ({ doc }: PublicationCardProps) => {
         >
           Читать в источнике
         </a>
+
+        <span className={styles.meta}>{wordCount} слов</span>
       </div>
     </article>
   );
