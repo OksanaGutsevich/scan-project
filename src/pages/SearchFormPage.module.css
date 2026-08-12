@@ -1,6 +1,6 @@
 .containerMain {
   margin-left: 53px;
-  margin-top: 45px;
+  max-width: 1440px;
 }
 
 .container {
@@ -325,4 +325,31 @@ h3 {
   border: solid #44b34d;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
+}
+
+@media (max-width: 768px) {
+  .containerMain {
+    margin: 0;
+  }
+  .wrapper {
+    display: block; /* было flex — теперь блочный поток */
+  }
+
+  .formFieldcontainer {
+    display: block;
+  }
+
+  .formFirst {
+    height: auto;
+  }
+
+  .filtersRow {
+    display: none;
+  }
+
+  .mainImage {
+    margin-left: 0;
+    display: block;
+    height: auto;
+  }
 }

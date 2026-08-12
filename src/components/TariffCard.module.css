@@ -114,3 +114,21 @@
 .description {
   font-size: 18px;
 }
+
+@media (max-width: 768px) {
+  .card {
+    width: 335px;
+    height: auto;
+    margin-top: 40px;
+  }
+
+  .card:last-child {
+    margin-bottom: 30px;
+  }
+
+  .btn {
+    width: 285px;
+    height: 53px;
+    margin-bottom: 25px;
+  }
+}

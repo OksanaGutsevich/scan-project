@@ -50,7 +50,6 @@
   display: flex;
   justify-content: space-between; /* разводит элементы по краям */
   align-items: center; /* выравнивает по вертикали */
-  flex-wrap: wrap; /* на мобильных позволит перенести текст под логотип */
 }
 
 .logoWrapper {
@@ -64,4 +63,23 @@
   font-size: 0.95rem;
   gap: 1.5rem;
   margin-right: 48px;
+}
+
+@media (max-width: 768px) {
+  .planesWrapper {
+    display: flex;
+    gap: 5px;
+    margin: 1px 1 1px 0;
+    padding-left: 1px;
+    padding-right: 1px;
+  }
+
+  .logoWrapper {
+    margin-left: 20px;
+  }
+
+  .footerText {
+    margin-right: 20px;
+    font-size: 14px;
+  }
 }

@@ -1,5 +1,6 @@
 .resultsPage {
   padding: 20px;
+  max-width: 1440px;
 }
 
 .errorBlock {
@@ -248,8 +249,8 @@
 
 /* У текста не должно быть своих отступов */
 .loadingText {
-  max-width: 200px;
-  max-height: 200px;
+  width: 200px;
+  height: 200px;
   margin-top: 70px;
   padding-top: 60px;
 }

@@ -6,6 +6,24 @@
 .container {
   width: 100%;
   max-width: 1346px;
+  margin: 0 auto; /* центрируем контейнер */
+}
+
+.carouselWrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Swiper сам задаёт ширину слайдов, не мешаем ему */
+.swiperRoot {
+  width: 100%;
+  padding: 15px;
+  box-sizing: border-box;
+}
+
+.slide {
+  /* слайд должен занимать столько места, сколько задано в slidesPerView */
+  height: 100%;
 }
 
 .title {
@@ -16,52 +34,25 @@
   font-family: "FerryBlack", sans-serif;
 }
 
-.carouselWrapper {
-  position: relative;
-  width: 100%;
-  max-width: 1346px;
-  margin: 0 auto;
-}
-
-/* wrapper — теперь контейнер для обрезки И для позиционирования кнопок */
-.wrapper {
-  position: relative; /* важно: теперь кнопки позиционируются отсюда */
-  width: 100%;
-  overflow: hidden;
-}
-
-.cardsContainer {
-  display: flex;
-  gap: 36px;
-  transform: translateX(0);
-  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-  padding: 36px;
-  overflow: hidden;
-}
-
 .card {
-  /* Ширина ровно 1/3 минус 2 отступа по 32px */
-  flex: 0 0 calc((100% - 2 * 36px) / 3);
-  max-width: 400px;
+  /* УБРАЛИ width: 400px — теперь карточка занимает весь слайд */
+  width: 100%;
+  min-width: 300px; /* можно оставить минимальную ширину */
   padding: 22px;
   border-radius: 8px;
-  height: 225px;
+  height: 225px; /* фиксированная высота — ок */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   background: #fff;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  box-sizing: border-box; /* Критично: чтобы padding не увеличивал общую ширину сверх flex-расчета */
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .card:hover:not(.card--current) {
   transform: translateY(-4px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-}
-
-/* Класс, который будем добавлять через React для «первой» карточки */
-.card.isFirst {
-  margin-left: 15px; /* вот этот отступ и создаёт эффект «большого padding» слева */
 }
 
 .cardIcon {
@@ -83,7 +74,7 @@
   width: 39px;
   height: 39px;
   position: absolute;
-  top: 50%;
+  top: 40%;
   transform: translateY(-50%);
   background: transparent;
   border: none;
@@ -100,12 +91,44 @@
 
 .navButton:hover {
   transform: translateY(-50%) scale(1.2);
+  color: #000; /* чуть темнее при наведении */
 }
 
 .prev {
-  left: 10px;
+  left: -45px;
 }
 
 .next {
-  right: -10px;
+  right: -45px;
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 28px;
+  }
+
+  .card {
+    width: 290px; /* Уменьшаем карточку для мобильного */
+    height: 188px;
+    padding: 10px; /* Чуть меньше отступ внутри */
+    margin: 0 auto; /* Центрируем в слайде */
+    border-radius: 6px; /* Чуть меньше радиус для компактности */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+
+  .prev {
+    left: -8px;
+  }
+
+  .next {
+    right: 3px;
+  }
+
+  .swiperRoot {
+    padding: 5px;
+  }
+
+  .title {
+    padding: 0 14px;
+  }
 }

@@ -24,6 +24,9 @@
 
 .mainImage {
   margin-right: 48px;
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 .btnRequest {
@@ -38,6 +41,7 @@
   font-size: 22px;
   width: 335px;
   width: 100%;
+  height: 59px;
   /*плавный переход */
   transition:
     transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1),
@@ -73,7 +77,6 @@
   width: 100%;
   box-sizing: border-box;
   padding-left: 20px;
-  padding-left: 20px;
 }
 
 .featuresListTitle {
@@ -95,4 +98,54 @@
 
 .priceDeccription {
   margin: 0;
+}
+
+/* Адаптив для мобильных (до 768px, включая 375px) */
+@media (max-width: 768px) {
+  .container {
+    margin-left: 0px;
+    margin-right: 0px;
+  }
+
+  .mainContent {
+    display: block;
+  }
+  .mainTitle {
+    font-size: 28px;
+    font-weight: 800;
+  }
+
+  .mainText {
+    font-size: 18px;
+  }
+
+  .mainText br {
+    display: none;
+  }
+
+  .secondaryImage {
+    max-height: 905px;
+    max-width: 890px;
+  }
+
+  .planesTitle {
+    font-size: 28px;
+  }
+
+  .planesWrapper {
+    display: block;
+    gap: 36px;
+    margin: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .heroSection,
+  .planes {
+    padding: 0 14px;
+  }
+
+  .btnRequest {
+    padding: 8px 50px;
+  }
 }

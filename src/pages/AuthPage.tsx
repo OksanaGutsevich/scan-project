@@ -4,8 +4,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import styles from "./AuthPage.module.css";
 import { Header } from "../components/Header/Header";
-import { Footer } from "../components/Footer/Footer";
 import haractersImage from "../../src/assets/icons/haracters.png";
+import haractersImageDown from "../../src/assets/icons/haractersDown.png";
 import { Link } from "react-router-dom";
 import facebookIcon from "../../src/assets/icons/facebook.png";
 import googleIcon from "../../src/assets/icons/google.png";
@@ -343,6 +343,12 @@ export function AuthPage() {
                 </div>
               </div>
             </div>
+            <img
+              src={haractersImageDown}
+              alt=""
+              className={styles.haractersImageHidden}
+              aria-hidden="true"
+            />
           </div>
         </div>
       </main>
