@@ -149,7 +149,7 @@
   max-width: 242px; /* фиксируем ширину здесь */
 }
 
-/* Кастомная стрелка — исправлено */
+/* Кастомная стрелка */
 .selectWrapper::after {
   content: "";
   position: absolute;
@@ -249,8 +249,8 @@
   margin-top: 5px;
 }
 
-h3 {
-  font-size: 14px;
+.titleDate {
+  font-size: 18px;
   margin-left: 44px;
   margin-bottom: 0;
   margin-top: 30px;
@@ -329,7 +329,7 @@ h3 {
 
 @media (max-width: 768px) {
   .containerMain {
-    margin: 0;
+    margin: 5px 0 0 0;
   }
   .wrapper {
     display: block; /* было flex — теперь блочный поток */
@@ -351,5 +351,97 @@ h3 {
     margin-left: 0;
     display: block;
     height: auto;
+  }
+
+  .wrapperDate {
+    display: block;
+  }
+
+  .container {
+    display: block;
+    margin: 0;
+  }
+
+  .form {
+    margin: 0;
+    width: 100%;
+  }
+
+  .mainImage {
+    right: 0;
+    width: 100%;
+    height: auto;
+    margin-left: 38px;
+    margin-bottom: 40px;
+    margin-top: 30px;
+  }
+
+  .wrapperInnTonQuality {
+    margin: 0;
+  }
+
+  .btn,
+  .input,
+  .select,
+  .inputDate,
+  .formFieldcontainer {
+    margin: 0 auto;
+    width: 335px;
+  }
+
+  .btn {
+    margin-top: 40px;
+  }
+
+  .titleDate {
+    margin-left: 20px;
+  }
+
+  .selectLabel,
+  .label,
+  .important {
+    margin-left: 20px;
+  }
+
+  .important {
+    margin-bottom: 37px;
+  }
+
+  .selectWrapper {
+    margin-top: 20px;
+  }
+
+  .selectWrapper::after {
+    right: -70px;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .text {
+    font-size: 18px;
+  }
+
+  .textImagesWrapper {
+    margin-left: 14px;
+  }
+
+  .imagesWrapper {
+    margin-left: 10px;
+  }
+
+  .docsImage {
+    display: none;
+  }
+
+  .docImage {
+    width: 58px;
+    height: auto;
+  }
+
+  .errorBlock {
+    padding-left: 0;
+    margin: 0 auto;
   }
 }

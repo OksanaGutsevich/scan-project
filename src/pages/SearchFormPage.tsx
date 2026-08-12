@@ -76,6 +76,15 @@ function validateInn(innRaw: unknown): { isValid: boolean; message?: string } {
   return { isValid: true };
 }
 
+function formatInn(digits: string): string {
+  const clean = digits.replace(/\D/g, "");
+  if (clean.length <= 2) return clean;
+  if (clean.length <= 5) return `${clean.slice(0, 2)} ${clean.slice(2)}`;
+  if (clean.length <= 8)
+    return `${clean.slice(0, 2)} ${clean.slice(2, 5)} ${clean.slice(5)}`;
+  return `${clean.slice(0, 2)} ${clean.slice(2, 5)} ${clean.slice(5, 8)} ${clean.slice(8)}`;
+}
+
 export function SearchFormPage() {
   const [inn, setInn] = useState("");
   const [fromDate, setFromDate] = useState("");
@@ -85,6 +94,15 @@ export function SearchFormPage() {
   const [onlyWithRiskFactors, setOnlyWithRiskFactors] = useState(false);
   const [tonality, setTonality] = useState<TonalityOption>("any");
   const [limit, setLimit] = useState<string>("");
+
+  const handleInnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let raw = e.target.value;
+    raw = raw.replace(/[^0-9\s]/g, "");
+    const digits = raw.replace(/\s+/g, "");
+    const limited = digits.slice(0, 12);
+    const formatted = formatInn(limited);
+    setInn(formatted);
+  };
 
   // Ошибки
   const [innError, setInnError] = useState<string | null>(null);
@@ -195,13 +213,12 @@ export function SearchFormPage() {
                     <input
                       id="inn"
                       type="text"
-                      placeholder="10 или 12 цифр (пример 7710137066)"
+                      placeholder="10 или 12 цифр"
                       value={inn}
-                      onChange={(e) =>
-                        setInn(e.target.value.replace(/\D/g, ""))
-                      }
+                      onChange={handleInnChange}
                       className={`${styles.input} ${innError ? styles.inputError : ""}`}
                       autoComplete="off"
+                      maxLength={16}
                     />
                     {innError && (
                       <span className={styles.errorBlock}>{innError}</span>
@@ -337,7 +354,7 @@ export function SearchFormPage() {
 
               <div className={styles.wrapperDate}>
                 <div>
-                  <h3>Диапазон поиска*</h3>
+                  <h3 className={styles.titleDate}>Диапазон поиска*</h3>
                   <div className={styles.formFieldcontainer}>
                     <div className={styles.formFieldDate}>
                       <label
