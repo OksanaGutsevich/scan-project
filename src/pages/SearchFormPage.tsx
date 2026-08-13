@@ -8,6 +8,10 @@ import searchImage from "../assets/icons/search.png";
 import docImage from "../assets/icons/doc.png";
 import docsImage from "../assets/icons/docs.png";
 
+//datepicker
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 /**
  * Валидация ИНН (10 или 12 цифр) с проверкой контрольных чисел.
  * Возвращает { isValid: true } или { isValid: false, message: "..." }
@@ -87,8 +91,8 @@ function formatInn(digits: string): string {
 
 export function SearchFormPage() {
   const [inn, setInn] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const [fromDate, setFromDate] = useState<Date | null>(null); // теперь Date, а не строка
+  const [toDate, setToDate] = useState<Date | null>(null);
 
   const [onlyMainRole, setOnlyMainRole] = useState(false);
   const [onlyWithRiskFactors, setOnlyWithRiskFactors] = useState(false);
@@ -142,25 +146,27 @@ export function SearchFormPage() {
       return;
     }
 
-    const from = new Date(fromDate);
-    const to = new Date(toDate);
     const now = new Date();
     now.setHours(0, 0, 0, 0);
 
-    if (from > now || to > now) {
+    if (fromDate > now || toDate > now) {
       setDateError("Даты не могут быть в будущем.");
       return;
     }
 
-    if (from > to) {
+    if (fromDate > toDate) {
       setDateError("Дата начала не может быть позже даты окончания.");
       return;
     }
 
+    // Конвертируем в строки для URL (формат YYYY-MM-DD)
+    const fromDateStr = fromDate.toISOString().split("T")[0];
+    const toDateStr = toDate.toISOString().split("T")[0];
+
     const params = new URLSearchParams({
       inn: innCleanStr,
-      fromDate,
-      toDate,
+      fromDate: fromDateStr,
+      toDate: toDateStr,
       onlyMainRole: String(onlyMainRole),
       onlyWithRiskFactors: String(onlyWithRiskFactors),
       tonality,
@@ -213,7 +219,7 @@ export function SearchFormPage() {
                     <input
                       id="inn"
                       type="text"
-                      placeholder="10 или 12 цифр"
+                      placeholder="10 или 12 цифр (7710137066)"
                       value={inn}
                       onChange={handleInnChange}
                       className={`${styles.input} ${innError ? styles.inputError : ""}`}
@@ -353,34 +359,51 @@ export function SearchFormPage() {
               </div>
 
               <div className={styles.wrapperDate}>
-                <div>
+                <div className={styles.wrapperDateFromTo}>
                   <h3 className={styles.titleDate}>Диапазон поиска*</h3>
                   <div className={styles.formFieldcontainer}>
+                    {/* Дата начала с кастомным плейсхолдером */}
                     <div className={styles.formFieldDate}>
                       <label
                         htmlFor="fromDate"
                         className={styles.label}
-                      ></label>
-                      <input
-                        id="fromDate"
-                        type="date"
-                        value={fromDate}
-                        onChange={(e) => setFromDate(e.target.value)}
-                        required
-                        className={`${styles.inputDate} ${dateError ? styles.inputError : ""}`}
-                      />
+                        style={{ display: "none" }}
+                      >
+                        Дата начала
+                      </label>
+                      <div className={styles.dateInputWrapper}>
+                        <DatePicker
+                          id="fromDate"
+                          selected={fromDate}
+                          onChange={(date) => setFromDate(date)}
+                          placeholderText="Дата начала"
+                          className={`${styles.inputDate} ${dateError ? styles.inputError : ""}`}
+                          dateFormat="dd.MM.yyyy"
+                          maxDate={new Date()}
+                        />
+                      </div>
                     </div>
 
+                    {/* Дата конца с кастомным плейсхолдером */}
                     <div className={styles.formFieldDate}>
-                      <label htmlFor="toDate" className={styles.label}></label>
-                      <input
-                        id="toDate"
-                        type="date"
-                        value={toDate}
-                        onChange={(e) => setToDate(e.target.value)}
-                        required
-                        className={`${styles.inputDate} ${dateError ? styles.inputError : ""}`}
-                      />
+                      <label
+                        htmlFor="toDate"
+                        className={styles.label}
+                        style={{ display: "none" }}
+                      >
+                        Дата конца
+                      </label>
+                      <div className={styles.dateInputWrapper}>
+                        <DatePicker
+                          id="toDate"
+                          selected={toDate}
+                          onChange={(date) => setToDate(date)}
+                          placeholderText="Дата конца"
+                          className={`${styles.inputDate} ${dateError ? styles.inputError : ""}`}
+                          dateFormat="dd.MM.yyyy"
+                          maxDate={new Date()}
+                        />
+                      </div>
                     </div>
                   </div>
 

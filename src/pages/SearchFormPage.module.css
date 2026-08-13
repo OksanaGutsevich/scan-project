@@ -154,7 +154,7 @@
   content: "";
   position: absolute;
   right: 16px;
-  top: 70%;
+  top: 60%;
   transform: translateY(-50%);
   width: 0; /* обязательно */
   height: 0; /* обязательно */
@@ -263,6 +263,7 @@
 }
 
 .formFieldcontainer {
+  margin-top: 20px;
   margin-left: 44px;
   display: flex;
   justify-content: left;
@@ -327,6 +328,26 @@
   transform: rotate(45deg);
 }
 
+.dateInputWrapper {
+  position: relative;
+  display: block; /* или flex, если нужно что-то ещё рядом */
+  width: 100%;
+}
+
+.dateInputWrapper::after {
+  content: "";
+  position: absolute;
+  right: 21px;
+  top: 60%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid #999; /* серый треугольник вниз */
+  pointer-events: none; /* чтобы клик проходил сквозь стрелку на поле */
+}
+
 @media (max-width: 768px) {
   .containerMain {
     margin: 5px 0 0 0;
@@ -336,7 +357,20 @@
   }
 
   .formFieldcontainer {
-    display: block;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .wrapperDateFromTo {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .formFieldDate {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
   }
 
   .formFirst {

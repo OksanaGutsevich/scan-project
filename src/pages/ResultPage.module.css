@@ -63,8 +63,21 @@
   cursor: pointer;
 }
 
-.showMoreButton {
-  transform: translateY(-1px) scale(1.01);
+/* Эффект при наведении */
+.showMoreButton:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(89, 112, 255, 0.3);
+}
+
+/* Эффект при фокусе (можно оставить как есть или сделать похожим на hover) */
+.showMoreButton:focus {
+  outline: none; /* убираем стандартный обвод */
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* Опционально: эффект при нажатии */
+.showMoreButton:active {
+  transform: translateY(0) scale(1);
 }
 
 .histogramTotals {
@@ -300,5 +313,11 @@
   .totalValue,
   .histogramTotals {
     font-size: 18px;
+  }
+
+  /* Убираем вертикальные линии на мобильном */
+  .monthCell::after,
+  .dataCell::after {
+    display: none;
   }
 }
