@@ -167,24 +167,153 @@ const loadDocumentsByIds = async (ids: string[]): Promise<ScanDoc[]> => {
 };
 
 // --- Блок гистограммы (в стиле карусели) ---
-function HistogramBlock({ data }: { data: HistogramResponse | null }) {
+function HistogramBlock({
+  data,
+  isLoading,
+}: {
+  data: HistogramResponse | null;
+  isLoading: boolean;
+}) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
-
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
-  if (!data || data.data.length === 0) return null;
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+
+    const checkScroll = () => {
+      const left = el.scrollLeft;
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      setCanScrollLeft(left > 0);
+      setCanScrollRight(left < maxScroll);
+    };
+
+    el.addEventListener("scroll", checkScroll);
+    window.addEventListener("resize", checkScroll);
+
+    // Пересчитываем при любом изменении data (в т.ч. переход от скелетона к данным)
+    checkScroll();
+
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, [data]); // ← важно: пересчёт при смене data
+
+  // Скелетон (загрузка) — кнопки БЕЗ disabled, но логика скролла заблокирована внутри prev/next
+  if (!data && isLoading) {
+    return (
+      <section className={styles.histogramSection}>
+        <h3 className={styles.histogramTitle}>Общая сводка</h3>
+
+        <div className={styles.histogramTotals}>
+          <span>
+            Найдено <strong className={styles.totalValue}>—</strong> вариантов
+          </span>
+        </div>
+
+        <div className={styles.histogramControls}>
+          <div className={styles.wrapper}>
+            <button
+              type="button"
+              className={`${styles.navButton} ${styles.prev}`}
+              aria-label="Прокрутить влево"
+              // onClick не привязываем: скролл всё равно заблокирован в prev()
+            >
+              <img src={arrowleftImage} alt="" className={styles.arrowImg} />
+            </button>
+
+            <div ref={wrapperRef} className={styles.histogramWrapper}>
+              <div className={styles.histogramHeaderRow}>
+                <div className={styles.fixedCell}>Период</div>
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`${styles.monthCell} ${styles.skeletonCell}`}
+                  >
+                    <span className={styles.skeletonText} />
+                  </div>
+                ))}
+              </div>
+
+              <div className={styles.histogramDataRow}>
+                <div className={styles.fixedCell}>Всего</div>
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`${styles.dataCell} ${styles.skeletonCell}`}
+                  >
+                    <span className={styles.skeletonText} />
+                  </div>
+                ))}
+              </div>
+
+              <div
+                className={`${styles.histogramDataRow} ${styles.histogramRowRisks}`}
+              >
+                <div className={styles.fixedCell}>Риски</div>
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`${styles.dataCell} ${styles.skeletonCell}`}
+                  >
+                    <span className={styles.skeletonText} />
+                  </div>
+                ))}
+              </div>
+
+              <div className={styles.loaderOverlay}>
+                <LoadingSpinner transparent />
+                <p className={styles.loadingText}>Загружаем данные...</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className={`${styles.navButton} ${styles.next}`}
+              aria-label="Прокрутить вправо"
+            >
+              <img src={arrowrightImage} alt="" className={styles.arrowImg} />
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!data || data.data.length === 0) {
+    return (
+      <section className={styles.histogramSection}>
+        <h3 className={styles.histogramTitle}>Общая сводка</h3>
+        <p>Нет данных для гистограммы</p>
+      </section>
+    );
+  }
 
   const totalSeries = data.data.find(
     (s) => s.histogramType === "totalDocuments",
   );
   const riskSeries = data.data.find((s) => s.histogramType === "riskFactors");
 
-  if (!totalSeries && !riskSeries) return null;
+  if (!totalSeries && !riskSeries) {
+    return (
+      <section className={styles.histogramSection}>
+        <h3 className={styles.histogramTitle}>Общая сводка</h3>
+        <p>Не найдены серии для отображения</p>
+      </section>
+    );
+  }
 
-  // Показываем только последние 12 месяцев
   const points = (totalSeries?.data ?? riskSeries?.data)?.slice(-12);
-  if (!points || points.length === 0) return null;
+  if (!points || points.length === 0) {
+    return (
+      <section className={styles.histogramSection}>
+        <h3 className={styles.histogramTitle}>Общая сводка</h3>
+        <p>Нет точек данных за выбранный период</p>
+      </section>
+    );
+  }
 
   const formatMonthYear = (iso: string): string => {
     const d = new Date(iso);
@@ -212,31 +341,16 @@ function HistogramBlock({ data }: { data: HistogramResponse | null }) {
     }
   };
 
-  const prev = () => scrollBy(-200);
-  const next = () => scrollBy(200);
+  // Блокируем скролл, если данных ещё нет (защита от клика в скелетоне)
+  const prev = () => {
+    if (!data) return;
+    scrollBy(-200);
+  };
 
-  useEffect(() => {
-    const el = wrapperRef.current;
-    if (!el) return;
-
-    const checkScroll = () => {
-      setCanScrollLeft(el.scrollLeft > 0);
-      setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth);
-    };
-
-    // Слушаем скролл
-    el.addEventListener("scroll", checkScroll);
-    // Слушаем изменение размеров
-    window.addEventListener("resize", checkScroll);
-
-    // Проверка сразу после монтирования
-    checkScroll();
-
-    return () => {
-      el.removeEventListener("scroll", checkScroll);
-      window.removeEventListener("resize", checkScroll);
-    };
-  }, []);
+  const next = () => {
+    if (!data) return;
+    scrollBy(200);
+  };
 
   return (
     <section className={styles.histogramSection}>
@@ -252,10 +366,8 @@ function HistogramBlock({ data }: { data: HistogramResponse | null }) {
         </span>
       </div>
 
-      {/* Обёртка как в карусели: overflow + position:relative для кнопок */}
       <div className={styles.histogramControls}>
         <div className={styles.wrapper}>
-          {/* Кнопка «Назад» */}
           <button
             type="button"
             onClick={prev}
@@ -266,9 +378,7 @@ function HistogramBlock({ data }: { data: HistogramResponse | null }) {
             <img src={arrowleftImage} alt="" className={styles.arrowImg} />
           </button>
 
-          {/* Прокручиваемый контейнер */}
           <div ref={wrapperRef} className={styles.histogramWrapper}>
-            {/* Шапка (месяцы) */}
             <div className={styles.histogramHeaderRow}>
               <div className={styles.fixedCell}>Период</div>
               {points.map((point) => (
@@ -278,7 +388,6 @@ function HistogramBlock({ data }: { data: HistogramResponse | null }) {
               ))}
             </div>
 
-            {/* Строка "Всего" */}
             <div className={styles.histogramDataRow}>
               <div className={styles.fixedCell}>Всего</div>
               {points.map((point) => {
@@ -291,7 +400,6 @@ function HistogramBlock({ data }: { data: HistogramResponse | null }) {
               })}
             </div>
 
-            {/* Строка "Риски" */}
             <div
               className={`${styles.histogramDataRow} ${styles.histogramRowRisks}`}
             >
@@ -307,7 +415,6 @@ function HistogramBlock({ data }: { data: HistogramResponse | null }) {
             </div>
           </div>
 
-          {/* Кнопка «Вперёд» */}
           <button
             type="button"
             onClick={next}
@@ -594,20 +701,6 @@ export function ResultsPage() {
     dispatch({ type: "appendDocuments", payload: newDocs });
   };
 
-  if (loading) {
-    return (
-      <div className={styles.resultsPage}>
-        <Header />
-        <div className={styles.loadingBlock}>
-          <div className={styles.loaderTextWrapper}>
-            <LoadingSpinner transparent />
-          </div>
-          <p className={styles.loadingText}>Загружаем данные...</p>
-        </div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className={styles.resultsPage}>
@@ -646,7 +739,8 @@ export function ResultsPage() {
         />
       </div>
 
-      <HistogramBlock data={histogramData} />
+      {/* Передаём loading как проп */}
+      <HistogramBlock data={histogramData} isLoading={loading} />
 
       <PublicationsBlock
         searchResult={searchResult}

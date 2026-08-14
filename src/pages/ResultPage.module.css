@@ -176,6 +176,11 @@
   opacity: 0.4;
 }
 
+/* Убираем линии у ячеек скелетона */
+.skeletonCell::after {
+  content: none !important;
+}
+
 /* Для строки "Риски": линия не доходит до низа на 16px */
 .histogramRowRisks .dataCell::after {
   bottom: 10px;
@@ -250,22 +255,31 @@
   display: block;
 }
 
-.loadingBlock {
+/* Оверлей поверх таблицы */
+.loaderOverlay {
+  position: absolute;
+  inset: 0; /* top/right/bottom/left = 0 */
   display: flex;
   flex-direction: column;
-  align-items: center; /* центрирование по горизонтали */
-  justify-content: center; /* центрирование по вертикали */
-  padding: 24px;
-  text-align: center;
-  min-height: 60vh;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: none; /* чтобы клики проходили сквозь лоадер */
+  gap: 12px;
+  top: 10px;
 }
 
-/* У текста не должно быть своих отступов */
+.loaderOverlay > :first-child {
+  transform: translateY(
+    -9px
+  ); /* ← поднимает первый элемент (спиннер) на 8px вверх */
+}
+
+/* Убираем лишние отступы у текста */
 .loadingText {
-  width: 200px;
-  height: 200px;
-  margin-top: 70px;
-  padding-top: 60px;
+  margin-top: 10px;
+  padding: 0;
+  font-size: 14px;
 }
 
 @media (max-width: 768px) {
