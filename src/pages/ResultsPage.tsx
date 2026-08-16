@@ -177,7 +177,23 @@ function HistogramBlock({
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
+  //-- Фиксированные шаги и определение режима --//
+  const MOBILE_STEP = 273; // пиксели для мобильного
+  const DESKTOP_STEP = 131; // пиксели для десктопа
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  const scrollAmount = isMobile ? MOBILE_STEP : DESKTOP_STEP;
+  const behavior = isMobile ? "auto" : "smooth";
+
+  // --- ШАГ 3: пересчёт доступности кнопок с учётом шага ---
   useEffect(() => {
     const el = wrapperRef.current;
     if (!el) return;
@@ -185,21 +201,23 @@ function HistogramBlock({
     const checkScroll = () => {
       const left = el.scrollLeft;
       const maxScroll = el.scrollWidth - el.clientWidth;
-      setCanScrollLeft(left > 0);
-      setCanScrollRight(left < maxScroll);
+
+      // Кнопки должны учитывать шаг, а не просто «есть ли место»
+      setCanScrollLeft(left > 1);
+      setCanScrollRight(left < maxScroll - scrollAmount + 1);
     };
 
     el.addEventListener("scroll", checkScroll);
     window.addEventListener("resize", checkScroll);
 
-    // Пересчитываем при любом изменении data (в т.ч. переход от скелетона к данным)
+    // Сразу проверяем при монтировании/обновлении
     checkScroll();
 
     return () => {
       el.removeEventListener("scroll", checkScroll);
       window.removeEventListener("resize", checkScroll);
     };
-  }, [data]); // ← важно: пересчёт при смене data
+  }, [data, scrollAmount]); // важно: пересчитывать при смене шага (мобильный/десктоп)
 
   // Скелетон (загрузка) — кнопки БЕЗ disabled, но логика скролла заблокирована внутри prev/next
   if (!data && isLoading) {
@@ -224,44 +242,41 @@ function HistogramBlock({
               <img src={arrowleftImage} alt="" className={styles.arrowImg} />
             </button>
 
-            <div ref={wrapperRef} className={styles.histogramWrapper}>
-              <div className={styles.histogramHeaderRow}>
-                <div className={styles.fixedCell}>Период</div>
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`${styles.monthCell} ${styles.skeletonCell}`}
-                  >
-                    <span className={styles.skeletonText} />
-                  </div>
-                ))}
-              </div>
-
-              <div className={styles.histogramDataRow}>
-                <div className={styles.fixedCell}>Всего</div>
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`${styles.dataCell} ${styles.skeletonCell}`}
-                  >
-                    <span className={styles.skeletonText} />
-                  </div>
-                ))}
-              </div>
-
+            <div
+              ref={wrapperRef}
+              className={`${styles.histogramWrapper} ${styles.skeletonWrapper}`}
+            >
+              {/* 1. Строка заголовков (Период / Всего / Риски) */}
               <div
-                className={`${styles.histogramDataRow} ${styles.histogramRowRisks}`}
+                className={`${styles.histogramRow} ${styles.skeletonHeader}`}
               >
-                <div className={styles.fixedCell}>Риски</div>
-                {Array.from({ length: 12 }).map((_, i) => (
+                <div className={`${styles.fixedCell} ${styles.headerCell}`}>
+                  Период
+                </div>
+                <div className={`${styles.fixedCell} ${styles.headerCell}`}>
+                  Всего
+                </div>
+                <div className={`${styles.fixedCell} ${styles.headerCell}`}>
+                  Риски
+                </div>
+              </div>
+
+              {/* 2. Блоки месяцев (каждый содержит 3 ячейки) */}
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div key={i} className={styles.histogramMonthBlock}>
+                  <div className={`${styles.monthCell} ${styles.skeletonCell}`}>
+                    <span className={styles.skeletonText} />
+                  </div>
+                  <div className={`${styles.dataCell} ${styles.skeletonCell}`}>
+                    <span className={styles.skeletonText} />
+                  </div>
                   <div
-                    key={i}
-                    className={`${styles.dataCell} ${styles.skeletonCell}`}
+                    className={`${styles.dataCell} ${styles.skeletonCell} ${styles.riskCell}`}
                   >
                     <span className={styles.skeletonText} />
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
 
               <div className={styles.loaderOverlay}>
                 <LoadingSpinner transparent />
@@ -335,21 +350,15 @@ function HistogramBlock({
     ? totalSeries.data.reduce((sum, p) => sum + (p.value ?? 0), 0)
     : 0;
 
-  const scrollBy = (amount: number) => {
-    if (wrapperRef.current) {
-      wrapperRef.current.scrollBy({ left: amount, behavior: "smooth" });
-    }
-  };
-
-  // Блокируем скролл, если данных ещё нет (защита от клика в скелетоне)
+  // --- Скролл строго на шаг ---
   const prev = () => {
     if (!data) return;
-    scrollBy(-200);
+    wrapperRef.current?.scrollBy({ left: -scrollAmount, behavior });
   };
 
   const next = () => {
     if (!data) return;
-    scrollBy(200);
+    wrapperRef.current?.scrollBy({ left: scrollAmount, behavior });
   };
 
   return (
@@ -379,36 +388,36 @@ function HistogramBlock({
           </button>
 
           <div ref={wrapperRef} className={styles.histogramWrapper}>
+            {/* Заголовки в одной строке */}
             <div className={styles.histogramHeaderRow}>
-              <div className={styles.fixedCell}>Период</div>
-              {points.map((point) => (
-                <div key={point.date} className={styles.monthCell}>
-                  {formatMonthYear(point.date)}
-                </div>
-              ))}
+              <div className={`${styles.fixedCell} ${styles.headerCell}`}>
+                Период
+              </div>
+              <div className={`${styles.fixedCell} ${styles.headerCell}`}>
+                Всего
+              </div>
+              <div className={`${styles.fixedCell} ${styles.headerCell}`}>
+                Риски
+              </div>
             </div>
 
-            <div className={styles.histogramDataRow}>
-              <div className={styles.fixedCell}>Всего</div>
+            {/* НОВЫЙ общий контейнер для всех месяцев */}
+            <div className={styles.histogramMonthsContainer}>
               {points.map((point) => {
                 const total = getValueByDate(totalSeries, point.date);
-                return (
-                  <div key={point.date} className={styles.dataCell}>
-                    {total.toLocaleString()}
-                  </div>
-                );
-              })}
-            </div>
-
-            <div
-              className={`${styles.histogramDataRow} ${styles.histogramRowRisks}`}
-            >
-              <div className={styles.fixedCell}>Риски</div>
-              {points.map((point) => {
                 const risks = getValueByDate(riskSeries, point.date);
+
                 return (
-                  <div key={point.date} className={styles.dataCell}>
-                    {risks.toLocaleString()}
+                  <div key={point.date} className={styles.histogramMonthBlock}>
+                    <div className={styles.monthCell}>
+                      {formatMonthYear(point.date)}
+                    </div>
+                    <div className={styles.dataCell}>
+                      {total.toLocaleString()}
+                    </div>
+                    <div className={`${styles.dataCell} ${styles.riskCell}`}>
+                      {risks.toLocaleString()}
+                    </div>
                   </div>
                 );
               })}

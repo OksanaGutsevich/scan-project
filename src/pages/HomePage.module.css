@@ -128,6 +128,13 @@
     max-width: 890px;
   }
 
+  .secondaryImageWrapper {
+    width: 100%;
+    max-width: 375px;
+    margin: 0 auto;
+    overflow: hidden; /* обрезает всё, что вылезает */
+  }
+
   .planesTitle {
     font-size: 28px;
   }

@@ -12,7 +12,6 @@ import businessImage from "../assets/icons/business.png";
 import checkImage from "../assets/icons/check.png";
 import { useAuth } from "../hooks/useAuth";
 import { Header } from "../components/Header/Header";
-import { Footer } from "../components/Footer/Footer";
 
 export function HomePage() {
   const { isAuthenticated } = useAuth();
@@ -52,7 +51,7 @@ export function HomePage() {
         {/* Карусель: Почему именно мы */}
         <WhyWeCarousel cards={WHY_WE_CARDS} />
 
-        <div>
+        <div className={styles.secondaryImageWrapper}>
           <img
             src={secondaryImage}
             alt="Картинка сервиса по поиску публикаций"

@@ -45,7 +45,7 @@
 
 .showMoreContainer {
   display: flex;
-  justify-content: center; /* центрирует по горизонтали */
+  justify-content: center;
   margin-top: 20px;
   max-width: 1440px;
   width: 100%;
@@ -63,19 +63,16 @@
   cursor: pointer;
 }
 
-/* Эффект при наведении */
 .showMoreButton:hover {
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 4px 12px rgba(89, 112, 255, 0.3);
 }
 
-/* Эффект при фокусе (можно оставить как есть или сделать похожим на hover) */
 .showMoreButton:focus {
   outline: none; /* убираем стандартный обвод */
   transform: translateY(-2px) scale(1.02);
 }
 
-/* Опционально: эффект при нажатии */
 .showMoreButton:active {
   transform: translateY(0) scale(1);
 }
@@ -93,6 +90,7 @@
 /*Гистограмма*/
 /* Обертка с рамкой, скруглением и скроллом */
 .histogramWrapper {
+  display: flex;
   overflow-x: auto;
   white-space: nowrap;
   width: 100%;
@@ -101,6 +99,22 @@
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
   position: relative; /* ← обязательно */
+}
+
+/* Строка заголовков */
+.histogramHeaderRow {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 3; /* выше, чем у ячеек данных */
+  background-color: #029491;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Убедимся, что ячейки внутри строки не ломают sticky */
+.histogramHeaderRow > * {
+  position: static; /* не переопределяем sticky у детей */
 }
 
 /* Стили для скроллбара (опционально) */
@@ -156,10 +170,10 @@
 .monthCell::after {
   content: "";
   position: absolute;
-  top: 10px; /* отступ сверху */
-  bottom: 0px; /* отступ снизу */
+  top: 10px;
+  bottom: 0px;
   right: 0;
-  width: 2px; /* толщина линии */
+  width: 2px;
   background-color: #949494;
   opacity: 0.4;
 }
@@ -181,7 +195,7 @@
   content: none !important;
 }
 
-/* Для строки "Риски": линия не доходит до низа на 16px */
+/* Для строки "Риски": линия не доходит до низа на 10px */
 .histogramRowRisks .dataCell::after {
   bottom: 10px;
 }
@@ -191,18 +205,18 @@
   display: flex;
   align-items: center; /* вертикальное центрирование кнопок и таблицы */
   justify-content: center; /* центрируем всю конструкцию */
-  width: 100%; /* растянем на всю ширину родителя */
-  max-width: 1400px; /* ограничение по ширине, если нужно */
+  width: 100%;
+  max-width: 1400px;
 }
 
 /* Обёртка, которая содержит и кнопки, и скролл-контейнер */
 .wrapper {
   position: relative; /* чтобы кнопки позиционировались внутри неё */
-  display: flex; /* кнопки + скролл-блок в ряд */
+  display: flex;
   align-items: center;
   width: 100%;
   max-width: 1320px;
-  min-width: 0; /* важно: позволяет внутреннему скролл-блоку сжиматься */
+  min-width: 0; /*позволяет внутреннему скролл-блоку сжиматься */
 }
 
 /* Кнопки-стрелки */
@@ -258,7 +272,7 @@
 /* Оверлей поверх таблицы */
 .loaderOverlay {
   position: absolute;
-  inset: 0; /* top/right/bottom/left = 0 */
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -272,14 +286,18 @@
 .loaderOverlay > :first-child {
   transform: translateY(
     -9px
-  ); /* ← поднимает первый элемент (спиннер) на 8px вверх */
+  ); /* ← поднимаем первый элемент (спиннер) на 8px вверх */
 }
 
-/* Убираем лишние отступы у текста */
+/* убираем лишние отступы у текста */
 .loadingText {
   margin-top: 10px;
   padding: 0;
   font-size: 14px;
+}
+
+.histogramMonthsContainer {
+  display: flex;
 }
 
 @media (max-width: 768px) {
@@ -329,9 +347,46 @@
     font-size: 18px;
   }
 
-  /* Убираем вертикальные линии на мобильном */
+  /* убираем вертикальные линии на мобильном */
   .monthCell::after,
   .dataCell::after {
     display: none;
+  }
+
+  .histogramWrapper {
+    flex-direction: column;
+    max-width: 273px;
+    width: 100%;
+  }
+
+  .histogramHeaderRow {
+    flex-direction: row;
+  }
+
+  .histogramMonthBlock {
+    display: flex;
+    margin-bottom: 20px;
+  }
+
+  .fixedCell {
+    padding: 20px 10px;
+    width: 91px;
+  }
+
+  .monthCell,
+  .dataCell {
+    width: 91px;
+  }
+
+  /* Отдельный класс для строки заголовков в скелетоне */
+  .skeletonHeader {
+    display: flex;
+    flex-direction: row !important;
+  }
+
+  /* wrapper для скелетона горизонтальный */
+  .skeletonWrapper {
+    overflow-x: auto !important;
+    white-space: nowrap !important;
   }
 }

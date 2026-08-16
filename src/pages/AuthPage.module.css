@@ -178,12 +178,12 @@
 }
 
 .btn:disabled {
-  background-color: rgba(89, 112, 255, 0.3); /* полупрозрачный синий */
-  opacity: 0.7; /* дополнительная визуальная «приглушённость» */
+  background-color: rgba(89, 112, 255, 0.3);
+  opacity: 0.7;
 }
 
 .btn:not(:disabled):hover {
-  background-color: #4a5ddf; /* чуть темнее при наведении */
+  background-color: #4a5ddf;
 }
 
 .error {
@@ -245,7 +245,6 @@
   display: block;
 }
 
-/* Цвета фона для кнопок (чтобы иконки выглядели как на стандартных кнопках) */
 .yandexBtn,
 .googleBtn,
 .facebookBtn {
@@ -255,11 +254,11 @@
 
 .passwordErrorText,
 .loginErrorText {
-  color: #d32f2f; /* Красный цвет из Material Design, не слишком яркий */
-  font-size: 0.875rem; /* 14px — компактно, не ломает верстку */
+  color: #d32f2f;
+  font-size: 0.875rem;
   line-height: 1.3;
-  margin-top: 6px; /* Отступ от инпута */
-  margin-bottom: 12px; /* Чтобы не прилипало к кнопке */
+  margin-top: 6px;
+  margin-bottom: 12px;
   display: block;
   text-align: center;
 }
